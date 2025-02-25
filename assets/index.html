@@ -856,6 +856,65 @@
         </div>
     </div>
 
+    <!-- Edit Provider Modal -->
+    <div id="edit-provider-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑翻译提供商</h2>
+                <button onclick="toggleEditProviderModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-provider-old-name">
+                <div class="form-group">
+                    <label>类型</label>
+                    <select id="edit-provider-type" onchange="updateEditProviderFields()">
+                        <option value="openai">OpenAI</option>
+                        <option value="openai-compatible">OpenAI 兼容服务</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>名称</label>
+                    <input type="text" id="edit-provider-name" placeholder="例如：OpenAI">
+                </div>
+                <div class="form-group provider-field" id="edit-base-url-field">
+                    <label>API Base URL</label>
+                    <input type="text" id="edit-provider-base-url"
+                        placeholder="例如：https://api.example.com/v1/chat/completions">
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="edit-provider-api-key">
+                </div>
+                <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" id="edit-provider-model" placeholder="例如：gpt-3.5-turbo">
+                </div>
+                <div class="advanced-options">
+                    <button class="toggle-advanced" onclick="toggleAdvancedOptions(this)">
+                        <span class="icon">▼</span>
+                        高级选项
+                    </button>
+                    <div class="advanced-fields" style="display: none;">
+                        <div class="form-group">
+                            <label>System Prompt</label>
+                            <textarea id="edit-provider-prompt"
+                                placeholder="自定义系统提示词">You are a professional translator. Please translate the following text accurately while maintaining its original meaning and style</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Tokens</label>
+                            <input type="number" id="edit-provider-max-tokens" value="1000">
+                        </div>
+                        <div class="form-group">
+                            <label>Temperature</label>
+                            <input type="number" id="edit-provider-temperature" value="0.3" step="0.1" min="0" max="2">
+                        </div>
+                    </div>
+                </div>
+                <button onclick="updateProvider()" class="add-provider-btn">保存更改</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <script>
@@ -876,7 +935,7 @@
         // 加载提供商列表
         async function loadProviders() {
             try {
-                const providers = await window.go.main.App.GetProviders();
+                providers = await window.go.main.App.GetProviders();
                 const container = document.getElementById('providers-container');
 
                 if (!providers || providers.length === 0) {
@@ -894,6 +953,9 @@
                             <div class="provider-actions">
                                 <button onclick="setProviderActive('${provider.name}')" class="action-btn${provider.active ? ' active' : ''}">
                                     ${provider.active ? '已激活' : '激活'}
+                                </button>
+                                <button onclick="editProvider('${provider.name}')" class="action-btn">
+                                    编辑
                                 </button>
                                 <button onclick="removeProvider('${provider.name}')" class="delete-btn">&times;</button>
                             </div>
@@ -991,6 +1053,84 @@
                 await window.go.main.App.RemoveProvider(name);
                 await loadProviders();
                 showToast('提供商已删除');
+            } catch (error) {
+                showToast(error, 'error');
+            }
+        }
+
+        // 编辑提供商
+        function editProvider(name) {
+            // 从providers中找到需要编辑的提供商
+            const provider = providers.find(p => p.name === name);
+            if (!provider) {
+                showToast('未找到提供商', 'error');
+                return;
+            }
+            
+            // 初始化编辑提供商模态框
+            initEditProviderModal(provider);
+            
+            // 显示编辑提供商模态框
+            toggleEditProviderModal();
+        }
+
+        // 初始化编辑提供商模态框
+        function initEditProviderModal(provider) {
+            document.getElementById('edit-provider-type').value = provider.type;
+            document.getElementById('edit-provider-name').value = provider.name;
+            document.getElementById('edit-provider-old-name').value = provider.name; // 存储原名称，用于更新
+            document.getElementById('edit-provider-base-url').value = provider.base_url || '';
+            document.getElementById('edit-provider-api-key').value = provider.api_key || '';
+            document.getElementById('edit-provider-model').value = provider.model || '';
+            document.getElementById('edit-provider-prompt').value = provider.system_prompt || '';
+            document.getElementById('edit-provider-max-tokens').value = provider.max_tokens || 1000;
+            document.getElementById('edit-provider-temperature').value = provider.temperature || 0.3;
+            
+            // 根据提供商类型显示或隐藏BaseURL字段
+            updateEditProviderFields();
+        }
+
+        // 显示/隐藏编辑提供商模态框
+        function toggleEditProviderModal() {
+            const modal = document.getElementById('edit-provider-modal');
+            if (!modal.classList.contains('show')) {
+                modal.classList.add('show');
+            } else {
+                modal.classList.remove('show');
+            }
+        }
+
+        // 更新编辑提供商字段
+        function updateEditProviderFields() {
+            const type = document.getElementById('edit-provider-type').value;
+            const baseUrlField = document.getElementById('edit-base-url-field');
+            
+            if (type === 'openai') {
+                baseUrlField.classList.add('hidden');
+            } else {
+                baseUrlField.classList.remove('hidden');
+            }
+        }
+
+        // 更新提供商
+        async function updateProvider() {
+            try {
+                const oldName = document.getElementById('edit-provider-old-name').value;
+                const provider = {
+                    name: document.getElementById('edit-provider-name').value,
+                    type: document.getElementById('edit-provider-type').value,
+                    base_url: document.getElementById('edit-provider-base-url').value,
+                    api_key: document.getElementById('edit-provider-api-key').value,
+                    model: document.getElementById('edit-provider-model').value,
+                    system_prompt: document.getElementById('edit-provider-prompt').value,
+                    max_tokens: parseInt(document.getElementById('edit-provider-max-tokens').value) || 1000,
+                    temperature: parseFloat(document.getElementById('edit-provider-temperature').value) || 0.3,
+                };
+                
+                await window.go.main.App.UpdateProvider(oldName, provider);
+                await loadProviders();
+                toggleEditProviderModal();
+                showToast('提供商更新成功');
             } catch (error) {
                 showToast(error, 'error');
             }
@@ -1170,7 +1310,7 @@
                             </label>
                         </div>
                         <div class="provider-actions">
-                            <button onclick="editProvider('${provider.id}')" class="btn btn-small">编辑</button>
+                            <button onclick="editProvider('${provider.name}')" class="btn btn-small">编辑</button>
                             <button onclick="deleteProvider('${provider.id}')" class="btn btn-small btn-danger">删除</button>
                         </div>
                     </div>
@@ -1254,18 +1394,6 @@
                 // 恢复复选框状态
                 await loadProviders();
             }
-        }
-
-        async function editProvider(id) {
-            const provider = providers.find(p => p.id === id);
-            if (!provider) return;
-
-            const name = prompt('输入提供商名称', provider.name);
-            if (!name) return;
-
-            provider.name = name;
-            await window.go.main.App.UpdateProvider(id, JSON.stringify(provider));
-            await loadProviders();
         }
 
         function toggleAddProviderModal() {

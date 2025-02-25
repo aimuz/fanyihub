@@ -37,3 +37,7 @@ export function SetProviderActive(arg1) {
 export function TranslateWithLLM(arg1) {
   return window['go']['main']['App']['TranslateWithLLM'](arg1);
 }
+
+export function UpdateProvider(arg1, arg2) {
+  return window['go']['main']['App']['UpdateProvider'](arg1, arg2);
+}

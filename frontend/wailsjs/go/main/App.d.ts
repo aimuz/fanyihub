@@ -5,7 +5,7 @@ import {main} from '../models';
 
 export function AddProvider(arg1:llm.Provider):Promise<void>;
 
-export function DetectLanguage(arg1:string):Promise<Record<string, string>>;
+export function DetectLanguage(arg1:string):Promise<main.DetectLanguageResponse>;
 
 export function GetActiveProvider():Promise<llm.Provider>;
 
@@ -20,3 +20,5 @@ export function SetDefaultLanguage(arg1:string,arg2:string):Promise<void>;
 export function SetProviderActive(arg1:string):Promise<void>;
 
 export function TranslateWithLLM(arg1:main.TranslateRequest):Promise<string>;
+
+export function UpdateProvider(arg1:string,arg2:llm.Provider):Promise<void>;

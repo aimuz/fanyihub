@@ -33,6 +33,22 @@ export namespace llm {
 
 export namespace main {
 	
+	export class DetectLanguageResponse {
+	    code: string;
+	    name: string;
+	    defaultTarget: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DetectLanguageResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.code = source["code"];
+	        this.name = source["name"];
+	        this.defaultTarget = source["defaultTarget"];
+	    }
+	}
 	export class TranslateRequest {
 	    text: string;
 	    sourceLang: string;

@@ -141,6 +141,57 @@ func (a *App) RemoveProvider(name string) error {
 	return a.config.Save()
 }
 
+// UpdateProvider updates an existing provider
+func (a *App) UpdateProvider(name string, updatedProvider llm.Provider) error {
+	// 验证提供商配置
+	if updatedProvider.Name == "" {
+		return fmt.Errorf("provider name is required")
+	}
+	if updatedProvider.APIKey == "" {
+		return fmt.Errorf("api key is required")
+	}
+	if updatedProvider.Model == "" {
+		return fmt.Errorf("model is required")
+	}
+	if updatedProvider.Type == "openai-compatible" && updatedProvider.BaseURL == "" {
+		return fmt.Errorf("base url is required for openai-compatible provider")
+	}
+
+	// 添加默认值
+	if updatedProvider.MaxTokens == 0 {
+		updatedProvider.MaxTokens = 1000
+	}
+	if updatedProvider.Temperature == 0 {
+		updatedProvider.Temperature = 0.3
+	}
+
+	// 找到要更新的提供商
+	index := slices.IndexFunc(a.config.Providers, func(p llm.Provider) bool {
+		return p.Name == name
+	})
+	if index == -1 {
+		return fmt.Errorf("provider not found")
+	}
+
+	// 保存原来的激活状态
+	wasActive := a.config.Providers[index].Active
+
+	// 如果新的提供商设置为激活状态，则停用其他提供商
+	if updatedProvider.Active && !wasActive {
+		for i := range a.config.Providers {
+			a.config.Providers[i].Active = false
+		}
+	} else {
+		// 保持原有的激活状态
+		updatedProvider.Active = wasActive
+	}
+
+	// 更新提供商
+	a.config.Providers[index] = updatedProvider
+
+	return a.config.Save()
+}
+
 type TranslateRequest struct {
 	Text       string `json:"text"`
 	SourceLang string `json:"sourceLang"`

@@ -330,10 +330,10 @@ func main() {
 			app,
 		},
 		Mac: &mac.Options{
-			TitleBar: mac.TitleBarHiddenInset(),
+			TitleBar: mac.TitleBarHidden(),
 			About: &mac.AboutInfo{
 				Title:   "FanyiHub",
-				Message: " 2024 FanyiHub. All rights reserved.",
+				Message: "©2025 FanyiHub. All rights reserved.",
 			},
 		},
 	})

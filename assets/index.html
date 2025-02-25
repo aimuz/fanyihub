@@ -638,6 +638,56 @@
             background: rgba(0, 0, 0, 0.05);
             color: #333;
         }
+
+        /* 设置部分样式 */
+        .settings-section {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e5e5e7;
+            padding-bottom: 20px;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .settings-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .settings-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .default-language-settings {
+            background: #f5f5f7;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .default-language-settings .form-group {
+            margin-bottom: 12px;
+        }
+
+        .default-language-settings select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e5e5e7;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+            appearance: none;
+        }
+
+        .default-language-settings button {
+            margin-top: 8px;
+        }
     </style>
 </head>
 
@@ -650,7 +700,7 @@
                     <select id="source-lang">
                         <option value="auto">自动检测</option>
                         <option value="zh">中文</option>
-                        <option value="en">英文</option>
+                        <option value="en">英语</option>
                         <option value="ja">日语</option>
                     </select>
                 </div>
@@ -665,7 +715,7 @@
                 </button>
                 <div class="language-group">
                     <select id="target-lang">
-                        <option value="en">英文</option>
+                        <option value="en">英语</option>
                         <option value="zh">中文</option>
                         <option value="ja">日语</option>
                     </select>
@@ -705,10 +755,45 @@
                 <button onclick="closeSettingsModal()" class="close-btn">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="providers-container">
-                    <!-- 提供商列表将通过 JavaScript 动态生成 -->
+                <div class="settings-section">
+                    <h3>默认翻译语言</h3>
+                    <p class="settings-description">当检测到以下语言时，自动设置目标语言</p>
+                    <div class="default-language-settings">
+                        <div class="form-group">
+                            <label>检测到中文时，翻译为：</label>
+                            <select id="default-zh-target">
+                                <option value="en">英语</option>
+                                <option value="ja">日语</option>
+                                <option value="ko">韩语</option>
+                                <option value="fr">法语</option>
+                                <option value="de">德语</option>
+                                <option value="es">西班牙语</option>
+                                <option value="ru">俄语</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>检测到英语时，翻译为：</label>
+                            <select id="default-en-target">
+                                <option value="zh">中文</option>
+                                <option value="ja">日语</option>
+                                <option value="ko">韩语</option>
+                                <option value="fr">法语</option>
+                                <option value="de">德语</option>
+                                <option value="es">西班牙语</option>
+                                <option value="ru">俄语</option>
+                            </select>
+                        </div>
+                        <button id="save-default-languages" class="btn btn-primary">保存默认语言设置</button>
+                    </div>
                 </div>
-                <button onclick="toggleAddProviderModal()" class="add-provider-btn">添加 LLM 提供商</button>
+
+                <div class="settings-section">
+                    <h3>翻译提供商</h3>
+                    <div id="providers-container">
+                        <!-- 提供商列表将通过 JavaScript 动态生成 -->
+                    </div>
+                    <button onclick="toggleAddProviderModal()" class="add-provider-btn">添加 LLM 提供商</button>
+                </div>
             </div>
         </div>
     </div>
@@ -753,7 +838,8 @@
                     <div class="advanced-fields" style="display: none;">
                         <div class="form-group">
                             <label>System Prompt</label>
-                            <textarea id="provider-prompt" placeholder="自定义系统提示词">You are a professional translator. Please translate the following text accurately while maintaining its original meaning and style</textarea>
+                            <textarea id="provider-prompt"
+                                placeholder="自定义系统提示词">You are a professional translator. Please translate the following text accurately while maintaining its original meaning and style</textarea>
                         </div>
                         <div class="form-group">
                             <label>Max Tokens</label>
@@ -782,6 +868,9 @@
             await loadProviders();
             // 找到当前激活的提供商
             currentProvider = providers.find(p => p.active)?.id;
+
+            // 加载默认翻译语言设置
+            await loadDefaultLanguages();
         }
 
         // 加载提供商列表
@@ -821,6 +910,45 @@
                 showToast(error, 'error');
             }
         }
+
+        // 加载默认翻译语言设置
+        async function loadDefaultLanguages() {
+            try {
+                const defaultLanguages = await window.go.main.App.GetDefaultLanguages();
+
+                // 设置默认值
+                if (defaultLanguages.zh) {
+                    document.getElementById('default-zh-target').value = defaultLanguages.zh;
+                }
+
+                if (defaultLanguages.en) {
+                    document.getElementById('default-en-target').value = defaultLanguages.en;
+                }
+            } catch (error) {
+                console.error('加载默认语言设置失败:', error);
+            }
+        }
+
+        // 保存默认翻译语言设置
+        async function saveDefaultLanguages() {
+            try {
+                const zhTarget = document.getElementById('default-zh-target').value;
+                const enTarget = document.getElementById('default-en-target').value;
+
+                // 保存中文的默认目标语言
+                await window.go.main.App.SetDefaultLanguage('zh', zhTarget);
+
+                // 保存英语的默认目标语言
+                await window.go.main.App.SetDefaultLanguage('en', enTarget);
+
+                showToast('默认翻译语言设置已保存');
+            } catch (error) {
+                showToast(error, 'error');
+            }
+        }
+
+        // 添加保存默认语言设置按钮的事件监听器
+        document.getElementById('save-default-languages').addEventListener('click', saveDefaultLanguages);
 
         // 添加提供商
         async function addProvider() {
@@ -893,20 +1021,14 @@
 
         // 防抖处理
         document.getElementById('source-text').addEventListener('input', () => {
-            if (debounceTimer) {
-                clearTimeout(debounceTimer);
-            }
-            
             // 添加语言检测
             const sourceText = document.getElementById('source-text').value;
-            const sourceLang = document.getElementById('source-lang');
-            
-            // 只有当选择了自动检测时才进行检测
-            if (sourceLang.value === 'auto' && sourceText.trim().length > 0) {
-                detectLanguage(sourceText);
+            // 只有当有文本输入时才进行检测
+            if (sourceText.trim().length > 0) {
+                detectLanguageDebounce(sourceText)
+            } else {
+                document.getElementById('target-text').value = "";
             }
-            
-            debounceTimer = setTimeout(translate, debounceTimeout);
         });
 
         // 语言检测函数
@@ -914,38 +1036,60 @@
             try {
                 const result = await window.go.main.App.DetectLanguage(text);
                 const sourceLangSelect = document.getElementById('source-lang');
-                
-                // 如果当前选择的是自动检测，并且检测到了语言
-                if (sourceLangSelect.value === 'auto' && result.name) {
-                    // 更新自动检测选项的文本
-                    const autoOption = sourceLangSelect.querySelector('option[value="auto"]');
-                    autoOption.textContent = `自动检测（${result.name}）`;
+                let targetLangChanged = false;
+
+                // 如果检测到了语言
+                if (result.name) {
+                    // 如果当前选择的是自动检测，更新自动检测选项的文本
+                    if (sourceLangSelect.value === 'auto') {
+                        const autoOption = sourceLangSelect.querySelector('option[value="auto"]');
+                        autoOption.textContent = `自动检测（${result.name}）`;
+                    }
+
+                    console.log(result)
+
+                    // 如果有默认的目标语言，自动设置目标语言
+                    // 无论源语言选择是什么，只要检测到语言并且有默认目标语言，就设置目标语言
+                    if (result.defaultTarget) {
+                        const targetLangSelect = document.getElementById('target-lang');
+                        console.log(targetLangSelect, targetLangSelect.value, result)
+                        targetLangChanged = targetLangSelect.value != result.defaultTarget
+                        // 只有当目标语言与检测到的语言不同时才设置
+                        targetLangSelect.value = result.defaultTarget;
+                    }
                 }
+
+                return targetLangChanged;
             } catch (error) {
                 console.error('语言检测错误:', error);
+                return false;
             }
         }
 
         // 当语言选择器改变时，重置自动检测选项的文本
-        document.getElementById('source-lang').addEventListener('change', function() {
+        document.getElementById('source-lang').addEventListener('change', function () {
             if (this.value !== 'auto') {
                 const autoOption = this.querySelector('option[value="auto"]');
                 autoOption.textContent = '自动检测';
-            } else {
-                // 如果切换到自动检测，立即检测当前文本
-                const sourceText = document.getElementById('source-text').value;
-                if (sourceText.trim().length > 0) {
-                    detectLanguage(sourceText);
-                }
             }
         });
+
+        function detectLanguageDebounce(text) {
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
+            }
+
+            debounceTimer = setTimeout(() => {
+                detectLanguage(text).then(() => {
+                    translate()
+                })
+            }, debounceTimeout);
+        }
 
         // 语言切换
         function swapLanguages() {
             const sourceLang = document.getElementById('source-lang');
             const targetLang = document.getElementById('target-lang');
-            const sourceText = document.getElementById('source-text');
-            const targetText = document.getElementById('target-text');
 
             // 如果源语言是自动检测，则不进行切换
             if (sourceLang.value === 'auto') {
@@ -954,13 +1098,6 @@
 
             // 交换语言选择
             [sourceLang.value, targetLang.value] = [targetLang.value, sourceLang.value];
-            // 交换文本内容
-            [sourceText.value, targetText.value] = [targetText.value, sourceText.value];
-
-            // 如果有新的源文本，触发翻译
-            if (sourceText.value) {
-                translate();
-            }
         }
 
         async function toggleProvider(id, active) {
@@ -981,11 +1118,6 @@
                 if (active) {
                     currentProvider = id;
                     showToast(`已激活 ${provider.name}`);
-                    // 如果有待翻译的文本，立即触发翻译
-                    const sourceText = document.getElementById('source-text').value;
-                    if (sourceText) {
-                        translate();
-                    }
                 }
             } catch (error) {
                 showToast(error, 'error');
@@ -1195,14 +1327,14 @@
         // 在页面加载时初始化
         window.addEventListener('load', () => {
             init();
-            
+
             // 如果已经有文本并且选择了自动检测，进行语言检测
             const sourceText = document.getElementById('source-text').value;
             const sourceLang = document.getElementById('source-lang').value;
             if (sourceText.trim().length > 0 && sourceLang === 'auto') {
                 detectLanguage(sourceText);
             }
-            
+
             // 点击模态框外部关闭
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', (e) => {

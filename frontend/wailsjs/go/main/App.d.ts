@@ -9,9 +9,13 @@ export function DetectLanguage(arg1:string):Promise<Record<string, string>>;
 
 export function GetActiveProvider():Promise<llm.Provider>;
 
+export function GetDefaultLanguages():Promise<Record<string, string>>;
+
 export function GetProviders():Promise<Array<llm.Provider>>;
 
 export function RemoveProvider(arg1:string):Promise<void>;
+
+export function SetDefaultLanguage(arg1:string,arg2:string):Promise<void>;
 
 export function SetProviderActive(arg1:string):Promise<void>;
 

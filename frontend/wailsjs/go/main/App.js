@@ -14,12 +14,20 @@ export function GetActiveProvider() {
   return window['go']['main']['App']['GetActiveProvider']();
 }
 
+export function GetDefaultLanguages() {
+  return window['go']['main']['App']['GetDefaultLanguages']();
+}
+
 export function GetProviders() {
   return window['go']['main']['App']['GetProviders']();
 }
 
 export function RemoveProvider(arg1) {
   return window['go']['main']['App']['RemoveProvider'](arg1);
+}
+
+export function SetDefaultLanguage(arg1, arg2) {
+  return window['go']['main']['App']['SetDefaultLanguage'](arg1, arg2);
 }
 
 export function SetProviderActive(arg1) {

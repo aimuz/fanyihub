@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aimuz/fanyihub/pkg/llm"
+	"github.com/aimuz/fanyihub/llm"
 )
 
 const (
@@ -19,6 +19,8 @@ const (
 // Config represents the application configuration
 type Config struct {
 	Providers []llm.Provider `json:"providers"`
+	// 默认翻译语言对
+	DefaultLanguages map[string]string `json:"default_languages"`
 }
 
 // Load loads the configuration from the config file
@@ -34,6 +36,10 @@ func Load() (*Config, error) {
 			// 如果配置文件不存在，返回默认配置
 			return &Config{
 				Providers: []llm.Provider{},
+				DefaultLanguages: map[string]string{
+					"zh": "en", // 中文默认翻译为英语
+					"en": "zh", // 英语默认翻译为中文
+				},
 			}, nil
 		}
 		return nil, fmt.Errorf("read config file: %w", err)
@@ -42,6 +48,14 @@ func Load() (*Config, error) {
 	var config Config
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
+	}
+
+	// 确保默认语言对存在
+	if config.DefaultLanguages == nil {
+		config.DefaultLanguages = map[string]string{
+			"zh": "en", // 中文默认翻译为英语
+			"en": "zh", // 英语默认翻译为中文
+		}
 	}
 
 	return &config, nil

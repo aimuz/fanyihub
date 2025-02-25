@@ -4,10 +4,12 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"log/slog"
+	"slices"
 
-	"github.com/aimuz/fanyihub/pkg/config"
-	"github.com/aimuz/fanyihub/pkg/langdetect"
-	"github.com/aimuz/fanyihub/pkg/llm"
+	"github.com/aimuz/fanyihub/config"
+	"github.com/aimuz/fanyihub/langdetect"
+	"github.com/aimuz/fanyihub/llm"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -119,25 +121,18 @@ func (a *App) GetActiveProvider() *llm.Provider {
 
 // RemoveProvider removes a provider by name
 func (a *App) RemoveProvider(name string) error {
-	var wasActive bool
-	var index = -1
-
 	// 找到要删除的提供商
-	for i, p := range a.config.Providers {
-		if p.Name == name {
-			wasActive = p.Active
-			index = i
-			break
-		}
-	}
-
+	index := slices.IndexFunc(a.config.Providers, func(p llm.Provider) bool {
+		return p.Name == name
+	})
 	if index == -1 {
 		return fmt.Errorf("provider not found")
 	}
 
-	// 删除提供商
-	a.config.Providers = append(a.config.Providers[:index], a.config.Providers[index+1:]...)
+	wasActive := a.config.Providers[index].Active
 
+	// 删除提供商
+	a.config.Providers = slices.Delete(a.config.Providers, index, index+1)
 	// 如果删除的是激活的提供商，且还有其他提供商，激活第一个
 	if wasActive && len(a.config.Providers) > 0 {
 		a.config.Providers[0].Active = true
@@ -152,12 +147,42 @@ type TranslateRequest struct {
 	TargetLang string `json:"targetLang"`
 }
 
+// GetDefaultLanguages 获取默认翻译语言对
+func (a *App) GetDefaultLanguages() map[string]string {
+	return a.config.DefaultLanguages
+}
+
+// SetDefaultLanguage 设置默认翻译语言对
+func (a *App) SetDefaultLanguage(sourceLang, targetLang string) error {
+	if a.config.DefaultLanguages == nil {
+		a.config.DefaultLanguages = make(map[string]string)
+	}
+	a.config.DefaultLanguages[sourceLang] = targetLang
+	return a.config.Save()
+}
+
+type DetectLanguageResponse struct {
+	Code          string `json:"code"`
+	Name          string `json:"name"`
+	DefaultTarget string `json:"defaultTarget"`
+}
+
 // DetectLanguage 检测文本的语言
-func (a *App) DetectLanguage(text string) map[string]string {
+func (a *App) DetectLanguage(text string) DetectLanguageResponse {
 	langCode, langName := langdetect.DetectLanguage(text)
-	return map[string]string{
-		"code": langCode,
-		"name": langName,
+
+	// 如果检测到了语言，并且有默认的目标语言，一并返回
+	targetLang := ""
+	if langCode != "auto" && a.config.DefaultLanguages != nil {
+		if defaultTarget, exists := a.config.DefaultLanguages[langCode]; exists {
+			targetLang = defaultTarget
+		}
+	}
+
+	return DetectLanguageResponse{
+		Code:          langCode,
+		Name:          langName,
+		DefaultTarget: targetLang,
 	}
 }
 
@@ -171,11 +196,10 @@ func (a *App) TranslateWithLLM(req TranslateRequest) (string, error) {
 	// 如果是自动检测，先检测语言
 	sourceLang := req.SourceLang
 	if sourceLang == "auto" {
-		detected, _ := langdetect.DetectLanguage(req.Text)
-		if detected != "auto" {
-			sourceLang = detected
-		}
+		sourceLang, _ = langdetect.DetectLanguage(req.Text)
 	}
+
+	slog.Info("TranslateWithLLM", "sourceLang", sourceLang, "targetLang", req.TargetLang, "text", req.Text)
 
 	// 创建客户端
 	client := llm.NewClient(provider)
@@ -183,7 +207,7 @@ func (a *App) TranslateWithLLM(req TranslateRequest) (string, error) {
 	// 准备消息
 	messages := []llm.ChatMessage{
 		{Role: "system", Content: provider.SystemPrompt},
-		{Role: "user", Content: fmt.Sprintf("请从%s 到 %s 翻译以下文本：\n%s", sourceLang, req.TargetLang, req.Text)},
+		{Role: "user", Content: fmt.Sprintf("please translate the following text from %s to %s:\n%s", sourceLang, req.TargetLang, req.Text)},
 	}
 
 	// 发送请求
@@ -208,7 +232,7 @@ func main() {
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
 		},
-		Bind: []interface{}{
+		Bind: []any{
 			app,
 		},
 		Mac: &mac.Options{
@@ -221,6 +245,6 @@ func main() {
 	})
 
 	if err != nil {
-		println("Error:", err.Error())
+		slog.Error("run app", "error", err.Error())
 	}
 }

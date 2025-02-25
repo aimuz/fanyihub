@@ -19,6 +19,8 @@ export function SetDefaultLanguage(arg1:string,arg2:string):Promise<void>;
 
 export function SetProviderActive(arg1:string):Promise<void>;
 
+export function ToggleWindowVisibility():Promise<void>;
+
 export function TranslateWithLLM(arg1:main.TranslateRequest):Promise<string>;
 
 export function UpdateProvider(arg1:string,arg2:llm.Provider):Promise<void>;

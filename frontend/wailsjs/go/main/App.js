@@ -34,6 +34,10 @@ export function SetProviderActive(arg1) {
   return window['go']['main']['App']['SetProviderActive'](arg1);
 }
 
+export function ToggleWindowVisibility() {
+  return window['go']['main']['App']['ToggleWindowVisibility']();
+}
+
 export function TranslateWithLLM(arg1) {
   return window['go']['main']['App']['TranslateWithLLM'](arg1);
 }

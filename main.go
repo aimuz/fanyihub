@@ -8,18 +8,21 @@ import (
 	"slices"
 
 	"github.com/aimuz/fanyihub/config"
+	"github.com/aimuz/fanyihub/hotkey"
 	"github.com/aimuz/fanyihub/langdetect"
 	"github.com/aimuz/fanyihub/llm"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
 type App struct {
-	ctx    context.Context
-	config *config.Config
+	ctx           context.Context
+	config        *config.Config
+	hotkeyManager *hotkey.HotkeyManager
 }
 
 // NewApp creates a new App application struct
@@ -39,6 +42,43 @@ func (a *App) startup(ctx context.Context) {
 		cfg = &config.Config{} // 使用空配置
 	}
 	a.config = cfg
+
+	// 初始化全局快捷键
+	a.setupGlobalHotkeys()
+}
+
+// setupGlobalHotkeys 设置全局快捷键
+func (a *App) setupGlobalHotkeys() {
+	// 创建窗口切换回调函数
+	toggleCb := func() {
+		// 显示或隐藏主窗口
+		a.ToggleWindowVisibility()
+		slog.Info("触发全局快捷键：切换窗口")
+	}
+
+	// 初始化热键管理器
+	a.hotkeyManager = hotkey.NewHotkeyManager(toggleCb)
+	err := a.hotkeyManager.Start()
+	if err != nil {
+		slog.Error("启动全局快捷键失败", "error", err.Error())
+	} else {
+		slog.Info("全局快捷键已启动")
+	}
+}
+
+// ToggleWindowVisibility 切换窗口的可见性（显示/隐藏）
+func (a *App) ToggleWindowVisibility() {
+	runtime.WindowShow(a.ctx)
+	slog.Info("显示窗口并置于前台")
+}
+
+// shutdown is called when the app is closing
+func (a *App) shutdown(ctx context.Context) {
+	// 停止全局快捷键监听
+	if a.hotkeyManager != nil {
+		a.hotkeyManager.Stop()
+		slog.Info("全局快捷键已停止")
+	}
 }
 
 // GetProviders returns the list of providers
@@ -282,6 +322,9 @@ func main() {
 		},
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
+		},
+		OnShutdown: func(ctx context.Context) {
+			app.shutdown(ctx)
 		},
 		Bind: []any{
 			app,

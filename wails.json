@@ -1,0 +1,10 @@
+{
+  "name": "FanyiHub",
+  "outputfilename": "FanyiHub",
+  "frontend:install": "",
+  "frontend:build": "",
+  "author": {
+    "name": "aimuz",
+    "email": ""
+  }
+}

@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FanyiHub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px 60px;
+            /* 添加底部内边距 */
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            height: 100%;
+        }
+
+        .drag-region {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 28px;
+            width: 100%;
+            --wails-draggable: drag;
+        }
+
+        .header {
+            margin-top: 12px;
+            margin-bottom: 16px;
+        }
+
+        .language-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f5f5f7;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .language-group {
+            flex: 1;
+            position: relative;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:hover {
+            background-color: #f8f8f8;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+
+        .swap-btn {
+            background: white;
+            border: none;
+            padding: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 6px;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .swap-btn:hover {
+            background: #eee;
+            color: #333;
+        }
+
+        .translation-area {
+            flex: 1;
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            min-height: 0;
+        }
+
+        .text-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f7;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            background: none;
+            resize: none;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #333;
+            padding: 4px;
+        }
+
+        textarea:focus {
+            outline: none;
+        }
+
+        textarea::placeholder {
+            color: #999;
+        }
+
+        /* 底部栏样式 */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            background: #fff;
+            border-top: 1px solid #e5e5e7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .footer .version {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .footer .settings-btn {
+            color: #666;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .footer .settings-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: #666;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #333;
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 按钮基础样式 */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            background: #f5f5f7;
+            color: #333;
+        }
+
+        .btn:hover {
+            background: #e5e5e7;
+        }
+
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0066cc;
+        }
+
+        .btn-danger {
+            background: #ff3b30;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff1a1a;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* 开关样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+            margin: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            margin: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        input:checked+.slider {
+            background-color: #007aff;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(16px);
+        }
+
+        /* 提供商卡片样式 */
+        .provider-card {
+            background-color: #fff;
+            border: 1px solid #e5e5e7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        .provider-card:hover {
+            border-color: #007aff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .provider-card.active {
+            border-color: #007aff;
+            background-color: rgba(0, 122, 255, 0.02);
+        }
+
+        .provider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .provider-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .provider-title h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .provider-type {
+            font-size: 12px;
+            color: #666;
+            background: #f5f5f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .provider-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* 高级选项样式 */
+        .advanced-options {
+            margin-top: 16px;
+            border-top: 1px solid #e5e5e7;
+            padding-top: 16px;
+        }
+
+        .toggle-advanced {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .toggle-advanced:hover {
+            color: #333;
+        }
+
+        .toggle-advanced .icon {
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+
+        .advanced-fields {
+            margin-top: 16px;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e5e5e7;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #007aff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* 提供商类型选择 */
+        .provider-type-select {
+            margin-bottom: 16px;
+        }
+
+        .provider-type-select select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* 隐藏/显示字段 */
+        .provider-field {
+            transition: all 0.3s ease;
+        }
+
+        .provider-field.hidden {
+            display: none;
+        }
+
+        /* Settings Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            margin: 40px auto;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e5e7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #333;
+        }
+
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 提供商列表样式 */
+        #providers-container {
+            margin-bottom: 20px;
+        }
+
+        .provider-card {
+            background: #fff;
+            border: 1px solid #e5e5e7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .provider-card.active {
+            border-color: #007aff;
+            background: rgba(0, 122, 255, 0.02);
+        }
+
+        .provider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .provider-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .provider-type {
+            font-size: 12px;
+            color: #666;
+            background: #f5f5f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .provider-form {
+            margin-top: 16px;
+        }
+
+        /* 添加按钮样式 */
+        .add-provider-btn {
+            width: 100%;
+            padding: 12px;
+            background: #007aff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-provider-btn:hover {
+            background: #0066cc;
+        }
+
+        /* 提示框样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: #333;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 10000;
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        .toast.error {
+            background: rgba(255, 59, 48, 0.9);
+        }
+
+        /* 提供商卡片激活按钮样式 */
+        .provider-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 12px;
+            border: 1px solid #007aff;
+            border-radius: 4px;
+            background: transparent;
+            color: #007aff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        .action-btn.active {
+            background: #007aff;
+            color: #fff;
+        }
+
+        .delete-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="drag-region" data-wails-drag></div>
+    <div class="container">
+        <div class="header">
+            <div class="language-selector">
+                <div class="language-group">
+                    <select id="source-lang">
+                        <option value="auto">自动检测</option>
+                        <option value="zh">中文</option>
+                        <option value="en">英文</option>
+                        <option value="ja">日语</option>
+                    </select>
+                </div>
+                <button class="swap-btn" onclick="swapLanguages()" title="交换语言">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3L4 7L8 11"></path>
+                        <path d="M4 7H20"></path>
+                        <path d="M16 21L20 17L16 13"></path>
+                        <path d="M20 17H4"></path>
+                    </svg>
+                </button>
+                <div class="language-group">
+                    <select id="target-lang">
+                        <option value="en">英文</option>
+                        <option value="zh">中文</option>
+                        <option value="ja">日语</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="translation-area">
+            <div class="text-area">
+                <textarea id="source-text" placeholder="请输入要翻译的文本"></textarea>
+            </div>
+            <div class="text-area">
+                <textarea id="target-text" placeholder="翻译结果" readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部栏 -->
+    <div class="footer">
+        <div class="version">FanyiHub v1.0</div>
+        <button onclick="showSettingsModal()" class="settings-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>翻译服务设置</h2>
+                <button onclick="closeSettingsModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="providers-container">
+                    <!-- 提供商列表将通过 JavaScript 动态生成 -->
+                </div>
+                <button onclick="toggleAddProviderModal()" class="add-provider-btn">添加 LLM 提供商</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Provider Modal -->
+    <div id="add-provider-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加翻译提供商</h2>
+                <button onclick="toggleAddProviderModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>类型</label>
+                    <select id="provider-type" onchange="updateProviderFields()">
+                        <option value="openai">OpenAI</option>
+                        <option value="openai-compatible">OpenAI 兼容服务</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>名称</label>
+                    <input type="text" id="provider-name" placeholder="例如：OpenAI">
+                </div>
+                <div class="form-group provider-field" id="base-url-field">
+                    <label>API Base URL</label>
+                    <input type="text" id="provider-base-url"
+                        placeholder="例如：https://api.example.com/v1/chat/completions">
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="provider-api-key">
+                </div>
+                <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" id="provider-model" placeholder="例如：gpt-3.5-turbo">
+                </div>
+                <div class="advanced-options">
+                    <button class="toggle-advanced" onclick="toggleAdvancedOptions(this)">
+                        <span class="icon">▼</span>
+                        高级选项
+                    </button>
+                    <div class="advanced-fields" style="display: none;">
+                        <div class="form-group">
+                            <label>System Prompt</label>
+                            <textarea id="provider-prompt" placeholder="自定义系统提示词">You are a professional translator. Please translate the following text accurately while maintaining its original meaning and style</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Tokens</label>
+                            <input type="number" id="provider-max-tokens" value="1000">
+                        </div>
+                        <div class="form-group">
+                            <label>Temperature</label>
+                            <input type="number" id="provider-temperature" value="0.3" step="0.1" min="0" max="2">
+                        </div>
+                    </div>
+                </div>
+                <button onclick="addProvider()" class="add-provider-btn">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let providers = [];
+        const debounceTimeout = 500;
+        let debounceTimer = null;
+
+        // 初始化
+        async function init() {
+            await loadProviders();
+            // 找到当前激活的提供商
+            currentProvider = providers.find(p => p.active)?.id;
+        }
+
+        // 加载提供商列表
+        async function loadProviders() {
+            try {
+                const providers = await window.go.main.App.GetProviders();
+                const container = document.getElementById('providers-container');
+
+                if (!providers || providers.length === 0) {
+                    container.innerHTML = '<div class="empty-state">还没有添加任何翻译提供商</div>';
+                    return;
+                }
+
+                container.innerHTML = providers.map(provider => `
+                    <div class="provider-card${provider.active ? ' active' : ''}">
+                        <div class="provider-header">
+                            <div class="provider-title">
+                                <span>${provider.name}</span>
+                                <span class="provider-type">${provider.type === 'openai' ? 'OpenAI' : 'OpenAI 兼容服务'}</span>
+                            </div>
+                            <div class="provider-actions">
+                                <button onclick="setProviderActive('${provider.name}')" class="action-btn${provider.active ? ' active' : ''}">
+                                    ${provider.active ? '已激活' : '激活'}
+                                </button>
+                                <button onclick="removeProvider('${provider.name}')" class="delete-btn">&times;</button>
+                            </div>
+                        </div>
+                        <div class="provider-info">
+                            <div>模型：${provider.model}</div>
+                            ${provider.system_prompt ? `<div>系统提示词：${provider.system_prompt}</div>` : ''}
+                            <div>最大 Token：${provider.max_tokens}</div>
+                            <div>温度：${provider.temperature}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showToast(error, 'error');
+            }
+        }
+
+        // 添加提供商
+        async function addProvider() {
+            try {
+                const provider = {
+                    name: document.getElementById('provider-name').value,
+                    type: document.getElementById('provider-type').value,
+                    base_url: document.getElementById('provider-base-url').value,
+                    api_key: document.getElementById('provider-api-key').value,
+                    model: document.getElementById('provider-model').value,
+                    system_prompt: document.getElementById('provider-prompt').value,
+                    max_tokens: parseInt(document.getElementById('provider-max-tokens').value) || 1000,
+                    temperature: parseFloat(document.getElementById('provider-temperature').value) || 0.3,
+                    active: true, // 新添加的提供商默认激活
+                };
+
+                await window.go.main.App.AddProvider(provider);
+                await loadProviders();
+                toggleAddProviderModal();
+                showToast('提供商添加成功');
+            } catch (error) {
+                showToast(error, 'error');
+            }
+        }
+
+        // 设置提供商激活状态
+        async function setProviderActive(name) {
+            try {
+                await window.go.main.App.SetProviderActive(name);
+                await loadProviders();
+                showToast('提供商已激活');
+            } catch (error) {
+                showToast(error, 'error');
+            }
+        }
+
+        // 删除提供商
+        async function removeProvider(name) {
+            try {
+                await window.go.main.App.RemoveProvider(name);
+                await loadProviders();
+                showToast('提供商已删除');
+            } catch (error) {
+                showToast(error, 'error');
+            }
+        }
+
+        // 翻译文本
+        async function translate() {
+            const text = document.getElementById('source-text').value;
+            if (!text) {
+                document.getElementById('target-text').value = "";
+                return;
+            }
+
+            try {
+                const sourceLang = document.getElementById('source-lang').value;
+                const targetLang = document.getElementById('target-lang').value;
+                const request = {
+                    text: text,
+                    sourceLang: sourceLang,
+                    targetLang: targetLang,
+                };
+                const result = await window.go.main.App.TranslateWithLLM(request);
+                document.getElementById('target-text').value = result;
+            } catch (error) {
+                showToast(error, 'error');
+            }
+        }
+
+
+        // 防抖处理
+        document.getElementById('source-text').addEventListener('input', () => {
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
+            }
+            debounceTimer = setTimeout(translate, debounceTimeout);
+        });
+
+        // 语言切换
+        function swapLanguages() {
+            const sourceLang = document.getElementById('source-lang');
+            const targetLang = document.getElementById('target-lang');
+            const sourceText = document.getElementById('source-text');
+            const targetText = document.getElementById('target-text');
+
+            // 如果源语言是自动检测，则不进行切换
+            if (sourceLang.value === 'auto') {
+                return;
+            }
+
+            // 交换语言选择
+            [sourceLang.value, targetLang.value] = [targetLang.value, sourceLang.value];
+            // 交换文本内容
+            [sourceText.value, targetText.value] = [targetText.value, sourceText.value];
+
+            // 如果有新的源文本，触发翻译
+            if (sourceText.value) {
+                translate();
+            }
+        }
+
+        async function toggleProvider(id, active) {
+            const provider = providers.find(p => p.id === id);
+            if (!provider) return;
+
+            try {
+                // 如果要停用当前激活的提供商，阻止操作
+                if (!active && !providers.some(p => p.id !== id && p.active)) {
+                    showToast('必须保持至少一个提供商处于激活状态', 'error');
+                    return;
+                }
+
+                provider.active = active;
+                await window.go.main.App.UpdateProvider(id, JSON.stringify(provider));
+                await loadProviders();
+
+                if (active) {
+                    currentProvider = id;
+                    showToast(`已激活 ${provider.name}`);
+                    // 如果有待翻译的文本，立即触发翻译
+                    const sourceText = document.getElementById('source-text').value;
+                    if (sourceText) {
+                        translate();
+                    }
+                }
+            } catch (error) {
+                showToast(error, 'error');
+                // 恢复复选框状态
+                await loadProviders();
+            }
+        }
+
+        // 关闭设置模态框
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('show');
+        }
+
+        // 打开设置模态框
+        function showSettingsModal() {
+            document.getElementById('settings-modal').classList.add('show');
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function (event) {
+            const modal = document.getElementById('settings-modal');
+            if (event.target === modal) {
+                closeSettingsModal();
+            }
+        };
+
+        function renderProviders() {
+            const container = document.getElementById('providers-container');
+            container.innerHTML = '';
+
+            if (providers.length === 0) {
+                container.innerHTML = '<div class="empty-state">还没有添加任何翻译提供商</div>';
+                return;
+            }
+
+            providers.forEach(provider => {
+                const card = document.createElement('div');
+                card.className = 'provider-card';
+                if (provider.active) card.classList.add('active');
+
+                card.innerHTML = `
+                    <div class="provider-header">
+                        <div class="provider-title">
+                            <h3>${provider.name}</h3>
+                            <span class="provider-type">${provider.type === 'openai' ? 'OpenAI' : 'OpenAI 兼容服务'}</span>
+                            <label class="switch">
+                                <input type="checkbox" ${provider.active ? 'checked' : ''} 
+                                    onchange="toggleProvider('${provider.id}', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="provider-actions">
+                            <button onclick="editProvider('${provider.id}')" class="btn btn-small">编辑</button>
+                            <button onclick="deleteProvider('${provider.id}')" class="btn btn-small btn-danger">删除</button>
+                        </div>
+                    </div>
+                    <div class="provider-form">
+                        ${provider.type === 'openai-compatible' ? `
+                        <div class="form-group">
+                            <label>API Base URL</label>
+                            <input type="text" value="${provider.config.base_url || ''}" 
+                                onchange="updateProviderConfig('${provider.id}', 'base_url', this.value)">
+                        </div>
+                        ` : ''}
+                        <div class="form-group">
+                            <label>API Key</label>
+                            <input type="password" value="${provider.config.api_key || ''}"
+                                onchange="updateProviderConfig('${provider.id}', 'api_key', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Model</label>
+                            <input type="text" value="${provider.config.model || ''}"
+                                onchange="updateProviderConfig('${provider.id}', 'model', this.value)">
+                        </div>
+                        <button class="toggle-advanced" onclick="toggleAdvancedOptions(this)">
+                            <span class="icon">▼</span>
+                            高级选项
+                        </button>
+                        <div class="advanced-fields" style="display: none;">
+                            <div class="form-group">
+                                <label>System Prompt</label>
+                                <textarea onchange="updateProviderConfig('${provider.id}', 'prompt', this.value)">${provider.config.prompt || ''}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Max Tokens</label>
+                                <input type="number" value="${provider.config.max_tokens || 1000}"
+                                    onchange="updateProviderConfig('${provider.id}', 'max_tokens', parseInt(this.value))">
+                            </div>
+                            <div class="form-group">
+                                <label>Temperature</label>
+                                <input type="number" step="0.1" min="0" max="2" value="${provider.config.temperature || 0.3}"
+                                    onchange="updateProviderConfig('${provider.id}', 'temperature', parseFloat(this.value))">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+
+                // 初始化高级选项的显示状态
+                const advancedButton = card.querySelector('.toggle-advanced');
+                const advancedFields = card.querySelector('.advanced-fields');
+                advancedButton.onclick = () => toggleAdvancedOptions(advancedButton);
+            });
+        }
+
+        async function updateProviderConfig(id, key, value) {
+            const provider = providers.find(p => p.id === id);
+            if (!provider) return;
+
+            provider.config[key] = value;
+            await window.go.main.App.UpdateProvider(id, JSON.stringify(provider));
+            await loadProviders();
+        }
+
+        async function deleteProvider(id) {
+            if (!confirm('确定要删除这个提供商吗？')) return;
+
+            try {
+                const provider = providers.find(p => p.id === id);
+                // 如果要删除的是激活状态的提供商，先激活另一个提供商
+                if (provider && provider.active) {
+                    const otherProvider = providers.find(p => p.id !== id);
+                    if (otherProvider) {
+                        otherProvider.active = true;
+                        await window.go.main.App.UpdateProvider(otherProvider.id, JSON.stringify(otherProvider));
+                    }
+                }
+
+                await window.go.main.App.DeleteProvider(id);
+                await loadProviders();
+                showToast('提供商已删除');
+            } catch (error) {
+                showToast(error, 'error');
+                // 恢复复选框状态
+                await loadProviders();
+            }
+        }
+
+        async function editProvider(id) {
+            const provider = providers.find(p => p.id === id);
+            if (!provider) return;
+
+            const name = prompt('输入提供商名称', provider.name);
+            if (!name) return;
+
+            provider.name = name;
+            await window.go.main.App.UpdateProvider(id, JSON.stringify(provider));
+            await loadProviders();
+        }
+
+        function toggleAddProviderModal() {
+            const settingsModal = document.getElementById('settings-modal');
+            const addModal = document.getElementById('add-provider-modal');
+
+            if (!addModal.classList.contains('show')) {
+                // 打开添加模态框时，保持设置模态框打开
+                addModal.classList.add('show');
+                clearAddProviderForm();
+            } else {
+                addModal.classList.remove('show');
+            }
+        }
+
+        function clearAddProviderForm() {
+            document.getElementById('provider-type').value = 'openai';
+            document.getElementById('provider-name').value = '';
+            document.getElementById('provider-base-url').value = '';
+            document.getElementById('provider-api-key').value = '';
+            document.getElementById('provider-model').value = '';
+            updateProviderFields();
+        }
+
+        function updateProviderFields() {
+            const type = document.getElementById('provider-type').value;
+            const baseUrlField = document.getElementById('base-url-field');
+
+            if (type === 'openai') {
+                baseUrlField.classList.add('hidden');
+            } else {
+                baseUrlField.classList.remove('hidden');
+            }
+        }
+
+        function toggleAdvancedOptions(btn) {
+            const advancedFields = btn.nextElementSibling;
+            const icon = btn.querySelector('.icon');
+            if (advancedFields.style.display === 'none') {
+                advancedFields.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                advancedFields.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        // 在页面加载时初始化
+        window.addEventListener('load', () => {
+            init();
+            // 点击模态框外部关闭
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('show');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

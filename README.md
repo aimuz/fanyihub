@@ -23,7 +23,6 @@ FanyiHub 是一个基于大语言模型（LLM）的智能翻译工具，使用 G
 
 - Go 1.21+
 - Wails CLI
-- Node.js (用于前端开发)
 
 #### 安装步骤
 

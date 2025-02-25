@@ -891,13 +891,53 @@
             }
         }
 
-
         // 防抖处理
         document.getElementById('source-text').addEventListener('input', () => {
             if (debounceTimer) {
                 clearTimeout(debounceTimer);
             }
+            
+            // 添加语言检测
+            const sourceText = document.getElementById('source-text').value;
+            const sourceLang = document.getElementById('source-lang');
+            
+            // 只有当选择了自动检测时才进行检测
+            if (sourceLang.value === 'auto' && sourceText.trim().length > 0) {
+                detectLanguage(sourceText);
+            }
+            
             debounceTimer = setTimeout(translate, debounceTimeout);
+        });
+
+        // 语言检测函数
+        async function detectLanguage(text) {
+            try {
+                const result = await window.go.main.App.DetectLanguage(text);
+                const sourceLangSelect = document.getElementById('source-lang');
+                
+                // 如果当前选择的是自动检测，并且检测到了语言
+                if (sourceLangSelect.value === 'auto' && result.name) {
+                    // 更新自动检测选项的文本
+                    const autoOption = sourceLangSelect.querySelector('option[value="auto"]');
+                    autoOption.textContent = `自动检测（${result.name}）`;
+                }
+            } catch (error) {
+                console.error('语言检测错误:', error);
+            }
+        }
+
+        // 当语言选择器改变时，重置自动检测选项的文本
+        document.getElementById('source-lang').addEventListener('change', function() {
+            if (this.value !== 'auto') {
+                const autoOption = this.querySelector('option[value="auto"]');
+                autoOption.textContent = '自动检测';
+            } else {
+                // 如果切换到自动检测，立即检测当前文本
+                const sourceText = document.getElementById('source-text').value;
+                if (sourceText.trim().length > 0) {
+                    detectLanguage(sourceText);
+                }
+            }
         });
 
         // 语言切换
@@ -1155,6 +1195,14 @@
         // 在页面加载时初始化
         window.addEventListener('load', () => {
             init();
+            
+            // 如果已经有文本并且选择了自动检测，进行语言检测
+            const sourceText = document.getElementById('source-text').value;
+            const sourceLang = document.getElementById('source-lang').value;
+            if (sourceText.trim().length > 0 && sourceLang === 'auto') {
+                detectLanguage(sourceText);
+            }
+            
             // 点击模态框外部关闭
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', (e) => {

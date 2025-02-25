@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/aimuz/fanyihub/pkg/config"
+	"github.com/aimuz/fanyihub/pkg/langdetect"
 	"github.com/aimuz/fanyihub/pkg/llm"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -28,7 +29,7 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-	
+
 	// 加载配置
 	cfg, err := config.Load()
 	if err != nil {
@@ -146,9 +147,18 @@ func (a *App) RemoveProvider(name string) error {
 }
 
 type TranslateRequest struct {
-	Text      string `json:"text"`
+	Text       string `json:"text"`
 	SourceLang string `json:"sourceLang"`
 	TargetLang string `json:"targetLang"`
+}
+
+// DetectLanguage 检测文本的语言
+func (a *App) DetectLanguage(text string) map[string]string {
+	langCode, langName := langdetect.DetectLanguage(text)
+	return map[string]string{
+		"code": langCode,
+		"name": langName,
+	}
 }
 
 // TranslateWithLLM translates text using the specified provider
@@ -158,13 +168,22 @@ func (a *App) TranslateWithLLM(req TranslateRequest) (string, error) {
 		return "", fmt.Errorf("no active provider")
 	}
 
+	// 如果是自动检测，先检测语言
+	sourceLang := req.SourceLang
+	if sourceLang == "auto" {
+		detected, _ := langdetect.DetectLanguage(req.Text)
+		if detected != "auto" {
+			sourceLang = detected
+		}
+	}
+
 	// 创建客户端
 	client := llm.NewClient(provider)
 
 	// 准备消息
 	messages := []llm.ChatMessage{
 		{Role: "system", Content: provider.SystemPrompt},
-		{Role: "user", Content: fmt.Sprintf("请从%s 到 %s 翻译以下文本：\n%s", req.SourceLang, req.TargetLang, req.Text)},
+		{Role: "user", Content: fmt.Sprintf("请从%s 到 %s 翻译以下文本：\n%s", sourceLang, req.TargetLang, req.Text)},
 	}
 
 	// 发送请求
@@ -180,9 +199,9 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:     "FanyiHub",
-		Width:     1024,
-		Height:    768,
+		Title:  "FanyiHub",
+		Width:  1024,
+		Height: 768,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

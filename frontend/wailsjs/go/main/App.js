@@ -6,6 +6,10 @@ export function AddProvider(arg1) {
   return window['go']['main']['App']['AddProvider'](arg1);
 }
 
+export function DetectLanguage(arg1) {
+  return window['go']['main']['App']['DetectLanguage'](arg1);
+}
+
 export function GetActiveProvider() {
   return window['go']['main']['App']['GetActiveProvider']();
 }

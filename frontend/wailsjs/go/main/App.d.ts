@@ -5,6 +5,8 @@ import {main} from '../models';
 
 export function AddProvider(arg1:llm.Provider):Promise<void>;
 
+export function DetectLanguage(arg1:string):Promise<Record<string, string>>;
+
 export function GetActiveProvider():Promise<llm.Provider>;
 
 export function GetProviders():Promise<Array<llm.Provider>>;

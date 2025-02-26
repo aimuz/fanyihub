@@ -930,6 +930,13 @@
 
             // 加载默认翻译语言设置
             await loadDefaultLanguages();
+            
+            // 监听剪贴板事件
+            window.runtime.EventsOn("set-clipboard-text", (text) => {
+                document.getElementById("source-text").value = text;
+                // 触发输入事件以启动翻译
+                document.getElementById("source-text").dispatchEvent(new Event("input"));
+            });
         }
 
         // 加载提供商列表

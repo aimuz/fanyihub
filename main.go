@@ -69,6 +69,14 @@ func (a *App) setupGlobalHotkeys() {
 // ToggleWindowVisibility 切换窗口的可见性（显示/隐藏）
 func (a *App) ToggleWindowVisibility() {
 	runtime.WindowShow(a.ctx)
+	// 获取剪贴板内容并发送到前端
+	clipboardText, err := runtime.ClipboardGetText(a.ctx)
+	if err != nil {
+		slog.Error("获取剪贴板内容失败", "error", err.Error())
+	}
+	if clipboardText != "" {
+		runtime.EventsEmit(a.ctx, "set-clipboard-text", clipboardText)
+	}
 	slog.Info("显示窗口并置于前台")
 }
 

@@ -119,6 +119,41 @@
             background: #f5f5f7;
             border-radius: 8px;
             padding: 12px;
+            position: relative;
+        }
+        
+        /* 翻译中状态指示器 */
+        .loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 8px 16px;
+            display: none;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .loading-indicator.show {
+            display: flex;
+        }
+        
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007aff;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         textarea {
@@ -760,6 +795,10 @@
             </div>
             <div class="text-area">
                 <textarea id="target-text" placeholder="翻译结果" readonly></textarea>
+                <div id="translation-loading" class="loading-indicator">
+                    <div class="loading-spinner"></div>
+                    <span>翻译中...</span>
+                </div>
             </div>
         </div>
     </div>
@@ -1184,6 +1223,14 @@
             }
 
             try {
+                // 显示翻译中状态
+                const loadingIndicator = document.getElementById('translation-loading');
+                loadingIndicator.classList.add('show');
+                
+                // 清空之前的翻译结果
+                document.getElementById('target-text').value = "";
+                
+                // 发送翻译请求
                 const sourceLang = document.getElementById('source-lang').value;
                 const targetLang = document.getElementById('target-lang').value;
                 const request = {
@@ -1195,6 +1242,10 @@
                 document.getElementById('target-text').value = result;
             } catch (error) {
                 showToast(error, 'error');
+            } finally {
+                // 隐藏翻译中状态
+                const loadingIndicator = document.getElementById('translation-loading');
+                loadingIndicator.classList.remove('show');
             }
         }
 
@@ -1207,6 +1258,8 @@
                 detectLanguageDebounce(sourceText)
             } else {
                 document.getElementById('target-text').value = "";
+                // 确保隐藏翻译中状态
+                document.getElementById('translation-loading').classList.remove('show');
             }
         });
 
@@ -1495,6 +1548,8 @@
         document.getElementById('clear-source-btn').addEventListener('click', () => {
             document.getElementById('source-text').value = '';
             document.getElementById('target-text').value = '';
+            // 确保隐藏翻译中状态
+            document.getElementById('translation-loading').classList.remove('show');
         });
         
         // 在页面加载时初始化

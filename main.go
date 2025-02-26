@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"slices"
 
+	"github.com/aimuz/fanyihub/clipboard"
 	"github.com/aimuz/fanyihub/config"
 	"github.com/aimuz/fanyihub/hotkey"
 	"github.com/aimuz/fanyihub/langdetect"
@@ -70,7 +71,7 @@ func (a *App) setupGlobalHotkeys() {
 func (a *App) ToggleWindowVisibility() {
 	runtime.WindowShow(a.ctx)
 	// 获取剪贴板内容并发送到前端
-	clipboardText, err := runtime.ClipboardGetText(a.ctx)
+	clipboardText, err := clipboard.GetText(a.ctx)
 	if err != nil {
 		slog.Error("获取剪贴板内容失败", "error", err.Error())
 	}

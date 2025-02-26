@@ -1,0 +1,18 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="256" fill="#007AFF"/>
+  
+  <!-- Speech bubbles representing translation -->
+  <path d="M300 340C278 340 260 358 260 380V540C260 562 278 580 300 580H360L400 640L440 580H500C522 580 540 562 540 540V380C540 358 522 340 500 340H300Z" fill="white"/>
+  <path d="M524 444C502 444 484 462 484 484V644C484 666 502 684 524 684H584L624 744L664 684H724C746 684 764 666 764 644V484C764 462 746 444 724 444H524Z" fill="white" fill-opacity="0.9"/>
+  
+  <!-- Chinese character 译 (yi - translation) simplified -->
+  <path d="M320 420H480" stroke="#007AFF" stroke-width="28" stroke-linecap="round"/>
+  <path d="M320 480H480" stroke="#007AFF" stroke-width="28" stroke-linecap="round"/>
+  <path d="M320 540H400" stroke="#007AFF" stroke-width="28" stroke-linecap="round"/>
+  
+  <!-- Latin character representing translation -->
+  <path d="M544 520H704" stroke="#007AFF" stroke-width="28" stroke-linecap="round"/>
+  <path d="M544 580H624" stroke="#007AFF" stroke-width="28" stroke-linecap="round"/>
+  <path d="M624 520L664 640" stroke="#007AFF" stroke-width="28" stroke-linecap="round"/>
+</svg>

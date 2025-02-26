@@ -75,6 +75,7 @@ func (a *App) ToggleWindowVisibility() {
 		slog.Error("获取剪贴板内容失败", "error", err.Error())
 	}
 	if clipboardText != "" {
+		slog.Info("剪贴板内容", "text", clipboardText)
 		runtime.EventsEmit(a.ctx, "set-clipboard-text", clipboardText)
 	}
 	slog.Info("显示窗口并置于前台")

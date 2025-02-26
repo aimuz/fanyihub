@@ -930,9 +930,10 @@
 
             // 加载默认翻译语言设置
             await loadDefaultLanguages();
-            
+
             // 监听剪贴板事件
             window.runtime.EventsOn("set-clipboard-text", (text) => {
+                document.getElementById("source-text").focus();
                 document.getElementById("source-text").value = text;
                 // 触发输入事件以启动翻译
                 document.getElementById("source-text").dispatchEvent(new Event("input"));
@@ -1073,10 +1074,10 @@
                 showToast('未找到提供商', 'error');
                 return;
             }
-            
+
             // 初始化编辑提供商模态框
             initEditProviderModal(provider);
-            
+
             // 显示编辑提供商模态框
             toggleEditProviderModal();
         }
@@ -1092,7 +1093,7 @@
             document.getElementById('edit-provider-prompt').value = provider.system_prompt || '';
             document.getElementById('edit-provider-max-tokens').value = provider.max_tokens || 1000;
             document.getElementById('edit-provider-temperature').value = provider.temperature || 0.3;
-            
+
             // 根据提供商类型显示或隐藏BaseURL字段
             updateEditProviderFields();
         }
@@ -1111,7 +1112,7 @@
         function updateEditProviderFields() {
             const type = document.getElementById('edit-provider-type').value;
             const baseUrlField = document.getElementById('edit-base-url-field');
-            
+
             if (type === 'openai') {
                 baseUrlField.classList.add('hidden');
             } else {
@@ -1133,7 +1134,7 @@
                     max_tokens: parseInt(document.getElementById('edit-provider-max-tokens').value) || 1000,
                     temperature: parseFloat(document.getElementById('edit-provider-temperature').value) || 0.3,
                 };
-                
+
                 await window.go.main.App.UpdateProvider(oldName, provider);
                 await loadProviders();
                 toggleEditProviderModal();

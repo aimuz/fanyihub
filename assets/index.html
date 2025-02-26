@@ -193,6 +193,29 @@
             width: 20px;
             height: 20px;
         }
+        
+        .source-container {
+            position: relative;
+            display: flex;
+            height: 100%;
+        }
+        
+        .source-text-area {
+            padding-right: 30px;
+        }
+        
+        .clear-btn {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: 0px;
+            right: 0px;
+            backdrop-filter: blur(2px);
+            background-color: rgba(245, 245, 247, 0.8);
+        }
 
         /* 按钮基础样式 */
         .btn {
@@ -725,7 +748,15 @@
 
         <div class="translation-area">
             <div class="text-area">
-                <textarea id="source-text" placeholder="请输入要翻译的文本"></textarea>
+                <div class="source-container">
+                    <textarea id="source-text" class="source-text-area" placeholder="请输入要翻译的文本"></textarea>
+                    <button id="clear-source-btn" class="icon-btn clear-btn" title="清空源文本">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
             </div>
             <div class="text-area">
                 <textarea id="target-text" placeholder="翻译结果" readonly></textarea>
@@ -1460,6 +1491,12 @@
             }, 3000);
         }
 
+        // 清空源文本
+        document.getElementById('clear-source-btn').addEventListener('click', () => {
+            document.getElementById('source-text').value = '';
+            document.getElementById('target-text').value = '';
+        });
+        
         // 在页面加载时初始化
         window.addEventListener('load', () => {
             init();

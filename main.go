@@ -273,7 +273,7 @@ func (a *App) DetectLanguage(text string) DetectLanguageResponse {
 	langCode, langName := langdetect.DetectLanguage(text)
 
 	// 如果检测到了语言，并且有默认的目标语言，一并返回
-	targetLang := ""
+	targetLang := "en" // 默认为英语
 	if langCode != "auto" && a.config.DefaultLanguages != nil {
 		if defaultTarget, exists := a.config.DefaultLanguages[langCode]; exists {
 			targetLang = defaultTarget
@@ -294,13 +294,11 @@ func (a *App) TranslateWithLLM(req TranslateRequest) (string, error) {
 		return "", fmt.Errorf("no active provider")
 	}
 
-	// 如果是自动检测，先检测语言
+	// 直接使用前端传入的确定语言，不再进行自动检测
 	sourceLang := req.SourceLang
-	if sourceLang == "auto" {
-		sourceLang, _ = langdetect.DetectLanguage(req.Text)
-	}
+	targetLang := req.TargetLang
 
-	slog.Info("TranslateWithLLM", "sourceLang", sourceLang, "targetLang", req.TargetLang, "text", req.Text)
+	slog.Info("TranslateWithLLM", "sourceLang", sourceLang, "targetLang", targetLang, "text", req.Text)
 
 	// 创建客户端
 	client := llm.NewClient(provider)
@@ -308,7 +306,7 @@ func (a *App) TranslateWithLLM(req TranslateRequest) (string, error) {
 	// 准备消息
 	messages := []llm.ChatMessage{
 		{Role: "system", Content: provider.SystemPrompt},
-		{Role: "user", Content: fmt.Sprintf("please translate the following text from %s to %s:\n%s", sourceLang, req.TargetLang, req.Text)},
+		{Role: "user", Content: fmt.Sprintf("please translate the following text from %s to %s:\n\n%s", sourceLang, targetLang, req.Text)},
 	}
 
 	// 发送请求

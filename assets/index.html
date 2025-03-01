@@ -756,7 +756,7 @@
             <div class="language-selector">
                 <div class="language-group">
                     <select id="source-lang">
-                        <option value="auto">自动检测</option>
+                        <option value="auto">自动</option>
                         <option value="zh">中文</option>
                         <option value="en">英语</option>
                         <option value="ja">日语</option>
@@ -773,6 +773,7 @@
                 </button>
                 <div class="language-group">
                     <select id="target-lang">
+                        <option value="auto">自动</option>
                         <option value="en">英语</option>
                         <option value="zh">中文</option>
                         <option value="ja">日语</option>
@@ -839,6 +840,7 @@
                                 <option value="de">德语</option>
                                 <option value="es">西班牙语</option>
                                 <option value="ru">俄语</option>
+                                <option value="auto">自动</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -851,6 +853,7 @@
                                 <option value="de">德语</option>
                                 <option value="es">西班牙语</option>
                                 <option value="ru">俄语</option>
+                                <option value="auto">自动</option>
                             </select>
                         </div>
                         <button id="save-default-languages" class="btn btn-primary">保存默认语言设置</button>
@@ -1108,7 +1111,7 @@
                 await window.go.main.App.AddProvider(provider);
                 await loadProviders();
                 toggleAddProviderModal();
-                showToast('提供商添加成功');
+                showToast(`添加 ${provider.name} 成功`);
             } catch (error) {
                 showToast(error, 'error');
             }
@@ -1119,7 +1122,7 @@
             try {
                 await window.go.main.App.SetProviderActive(name);
                 await loadProviders();
-                showToast('提供商已激活');
+                showToast(`${name} 已激活`);
             } catch (error) {
                 showToast(error, 'error');
             }
@@ -1130,7 +1133,7 @@
             try {
                 await window.go.main.App.RemoveProvider(name);
                 await loadProviders();
-                showToast('提供商已删除');
+                showToast(`${name} 已删除`);
             } catch (error) {
                 showToast(error, 'error');
             }
@@ -1208,7 +1211,7 @@
                 await window.go.main.App.UpdateProvider(oldName, provider);
                 await loadProviders();
                 toggleEditProviderModal();
-                showToast('提供商更新成功');
+                showToast(`更新 ${provider.name} 成功`);
             } catch (error) {
                 showToast(error, 'error');
             }
@@ -1230,9 +1233,38 @@
                 // 清空之前的翻译结果
                 document.getElementById('target-text').value = "";
                 
-                // 发送翻译请求
-                const sourceLang = document.getElementById('source-lang').value;
-                const targetLang = document.getElementById('target-lang').value;
+                // 获取源语言和目标语言
+                let sourceLang = document.getElementById('source-lang').value;
+                let targetLang = document.getElementById('target-lang').value;
+                
+                // 如果源语言是auto，使用已检测的语言（从选项文本提取）
+                if (sourceLang === 'auto') {
+                    const autoOption = document.getElementById('source-lang').querySelector('option[value="auto"]');
+                    const detectedText = autoOption.textContent;
+                    const match = detectedText.match(/自动（(.+)）/);
+                    if (match) {
+                        // 根据显示的语言名称转换为语言代码
+                        sourceLang = getLanguageCodeByName(match[1]);
+                    } else {
+                        // 如果没有检测到语言，默认使用英语
+                        sourceLang = 'en';
+                    }
+                }
+                
+                // 如果目标语言是auto，使用已确定的目标语言（从选项文本提取）
+                if (targetLang === 'auto') {
+                    const defaultLanguages = await window.go.main.App.GetDefaultLanguages();
+                    if (defaultLanguages[sourceLang]){
+                        targetLang = defaultLanguages[sourceLang];
+                    } else {
+                        targetLang = 'en';
+                    }
+                }
+                
+                // 记录翻译使用的语言
+                console.log("翻译使用语言：", sourceLang, "->", targetLang);
+                
+                // 发送翻译请求，传入明确的语言代码，而非"auto"
                 const request = {
                     text: text,
                     sourceLang: sourceLang,
@@ -1247,6 +1279,25 @@
                 const loadingIndicator = document.getElementById('translation-loading');
                 loadingIndicator.classList.remove('show');
             }
+        }
+        
+        // 根据语言名称获取语言代码
+        function getLanguageCodeByName(name) {
+            const languageMap = {
+                '中文': 'zh',
+                '英语': 'en',
+                '日语': 'ja',
+                '韩语': 'ko',
+                '法语': 'fr',
+                '德语': 'de',
+                '西班牙语': 'es',
+                '俄语': 'ru',
+                '意大利语': 'it',
+                '葡萄牙语': 'pt',
+                '阿拉伯语': 'ar'
+            };
+            
+            return languageMap[name] || 'en'; // 默认返回英语
         }
 
         // 防抖处理
@@ -1268,6 +1319,7 @@
             try {
                 const result = await window.go.main.App.DetectLanguage(text);
                 const sourceLangSelect = document.getElementById('source-lang');
+                const targetLangSelect = document.getElementById('target-lang');
                 let targetLangChanged = false;
 
                 // 如果检测到了语言
@@ -1275,19 +1327,23 @@
                     // 如果当前选择的是自动检测，更新自动检测选项的文本
                     if (sourceLangSelect.value === 'auto') {
                         const autoOption = sourceLangSelect.querySelector('option[value="auto"]');
-                        autoOption.textContent = `自动检测（${result.name}）`;
+                        autoOption.textContent = `自动（${result.name}）`;
                     }
 
-                    console.log(result)
-
-                    // 如果有默认的目标语言，自动设置目标语言
-                    // 无论源语言选择是什么，只要检测到语言并且有默认目标语言，就设置目标语言
-                    if (result.defaultTarget) {
-                        const targetLangSelect = document.getElementById('target-lang');
-                        console.log(targetLangSelect, targetLangSelect.value, result)
-                        targetLangChanged = targetLangSelect.value != result.defaultTarget
-                        // 只有当目标语言与检测到的语言不同时才设置
-                        targetLangSelect.value = result.defaultTarget;
+                    // 如果目标语言选择的是自动，更新自动选项的文本
+                    if (targetLangSelect.value === 'auto' && result.defaultTarget) {
+                        // 获取默认目标语言的名称
+                        let targetLangName = '';
+                        const targetOption = targetLangSelect.querySelector(`option[value="${result.defaultTarget}"]`);
+                        if (targetOption) {
+                            targetLangName = targetOption.textContent;
+                        }
+                        
+                        // 更新"自动"选项为"自动（目标语言名称）"格式
+                        const autoTargetOption = targetLangSelect.querySelector('option[value="auto"]');
+                        if (autoTargetOption && targetLangName) {
+                            autoTargetOption.textContent = `自动（${targetLangName}）`;
+                        }
                     }
                 }
 
@@ -1298,11 +1354,37 @@
             }
         }
 
-        // 当语言选择器改变时，重置自动检测选项的文本
+        // 当源语言选择器改变时，重置自动检测选项的文本并触发翻译
         document.getElementById('source-lang').addEventListener('change', function () {
             if (this.value !== 'auto') {
                 const autoOption = this.querySelector('option[value="auto"]');
-                autoOption.textContent = '自动检测';
+                autoOption.textContent = '自动';
+            }
+            
+            // 获取当前文本，如果有内容则重新翻译
+            const sourceText = document.getElementById('source-text').value;
+            if (sourceText.trim().length > 0) {
+                translate(); // 手动切换源语言后立即触发翻译
+            }
+        });
+        
+        // 当目标语言选择器改变时，重置自动选项的文本并触发翻译
+        document.getElementById('target-lang').addEventListener('change', async function () {
+            if (this.value !== 'auto') {
+                const autoOption = this.querySelector('option[value="auto"]');
+                if (autoOption) {
+                    autoOption.textContent = '自动';
+                }
+            }
+
+            if (this.value === 'auto') {
+                await detectLanguage(document.getElementById('source-text').value);
+            }
+            
+            // 获取当前文本，如果有内容则重新翻译
+            const sourceText = document.getElementById('source-text').value;
+            if (sourceText.trim().length > 0) {
+                translate(); // 手动切换目标语言后立即触发翻译
             }
         });
 
@@ -1313,7 +1395,8 @@
 
             debounceTimer = setTimeout(() => {
                 detectLanguage(text).then(() => {
-                    translate()
+                    // 在翻译前，确保已经检测到语言并更新了界面
+                    translate();
                 })
             }, debounceTimeout);
         }
@@ -1323,38 +1406,18 @@
             const sourceLang = document.getElementById('source-lang');
             const targetLang = document.getElementById('target-lang');
 
-            // 如果源语言是自动检测，则不进行切换
-            if (sourceLang.value === 'auto') {
+            // 如果源语言或目标语言是自动检测，则不进行切换
+            if (sourceLang.value === 'auto' || targetLang.value === 'auto') {
                 return;
             }
 
             // 交换语言选择
             [sourceLang.value, targetLang.value] = [targetLang.value, sourceLang.value];
-        }
-
-        async function toggleProvider(id, active) {
-            const provider = providers.find(p => p.id === id);
-            if (!provider) return;
-
-            try {
-                // 如果要停用当前激活的提供商，阻止操作
-                if (!active && !providers.some(p => p.id !== id && p.active)) {
-                    showToast('必须保持至少一个提供商处于激活状态', 'error');
-                    return;
-                }
-
-                provider.active = active;
-                await window.go.main.App.UpdateProvider(id, JSON.stringify(provider));
-                await loadProviders();
-
-                if (active) {
-                    currentProvider = id;
-                    showToast(`已激活 ${provider.name}`);
-                }
-            } catch (error) {
-                showToast(error, 'error');
-                // 恢复复选框状态
-                await loadProviders();
+            
+            // 如果源文本不为空，直接触发翻译（无需再次检测语言，因为我们已有明确的源语言和目标语言）
+            const sourceText = document.getElementById('source-text').value;
+            if (sourceText.trim().length > 0) {
+                translate(); // 交换语言后立即触发翻译
             }
         }
 
@@ -1376,84 +1439,6 @@
             }
         };
 
-        function renderProviders() {
-            const container = document.getElementById('providers-container');
-            container.innerHTML = '';
-
-            if (providers.length === 0) {
-                container.innerHTML = '<div class="empty-state">还没有添加任何翻译提供商</div>';
-                return;
-            }
-
-            providers.forEach(provider => {
-                const card = document.createElement('div');
-                card.className = 'provider-card';
-                if (provider.active) card.classList.add('active');
-
-                card.innerHTML = `
-                    <div class="provider-header">
-                        <div class="provider-title">
-                            <h3>${provider.name}</h3>
-                            <span class="provider-type">${provider.type === 'openai' ? 'OpenAI' : 'OpenAI 兼容服务'}</span>
-                            <label class="switch">
-                                <input type="checkbox" ${provider.active ? 'checked' : ''} 
-                                    onchange="toggleProvider('${provider.id}', this.checked)">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="provider-actions">
-                            <button onclick="editProvider('${provider.name}')" class="btn btn-small">编辑</button>
-                            <button onclick="deleteProvider('${provider.id}')" class="btn btn-small btn-danger">删除</button>
-                        </div>
-                    </div>
-                    <div class="provider-form">
-                        ${provider.type === 'openai-compatible' ? `
-                        <div class="form-group">
-                            <label>API Base URL</label>
-                            <input type="text" value="${provider.config.base_url || ''}" 
-                                onchange="updateProviderConfig('${provider.id}', 'base_url', this.value)">
-                        </div>
-                        ` : ''}
-                        <div class="form-group">
-                            <label>API Key</label>
-                            <input type="password" value="${provider.config.api_key || ''}"
-                                onchange="updateProviderConfig('${provider.id}', 'api_key', this.value)">
-                        </div>
-                        <div class="form-group">
-                            <label>Model</label>
-                            <input type="text" value="${provider.config.model || ''}"
-                                onchange="updateProviderConfig('${provider.id}', 'model', this.value)">
-                        </div>
-                        <button class="toggle-advanced" onclick="toggleAdvancedOptions(this)">
-                            <span class="icon">▼</span>
-                            高级选项
-                        </button>
-                        <div class="advanced-fields" style="display: none;">
-                            <div class="form-group">
-                                <label>System Prompt</label>
-                                <textarea onchange="updateProviderConfig('${provider.id}', 'prompt', this.value)">${provider.config.prompt || ''}</textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Max Tokens</label>
-                                <input type="number" value="${provider.config.max_tokens || 1000}"
-                                    onchange="updateProviderConfig('${provider.id}', 'max_tokens', parseInt(this.value))">
-                            </div>
-                            <div class="form-group">
-                                <label>Temperature</label>
-                                <input type="number" step="0.1" min="0" max="2" value="${provider.config.temperature || 0.3}"
-                                    onchange="updateProviderConfig('${provider.id}', 'temperature', parseFloat(this.value))">
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-
-                // 初始化高级选项的显示状态
-                const advancedButton = card.querySelector('.toggle-advanced');
-                const advancedFields = card.querySelector('.advanced-fields');
-                advancedButton.onclick = () => toggleAdvancedOptions(advancedButton);
-            });
-        }
 
         async function updateProviderConfig(id, key, value) {
             const provider = providers.find(p => p.id === id);
@@ -1462,30 +1447,6 @@
             provider.config[key] = value;
             await window.go.main.App.UpdateProvider(id, JSON.stringify(provider));
             await loadProviders();
-        }
-
-        async function deleteProvider(id) {
-            if (!confirm('确定要删除这个提供商吗？')) return;
-
-            try {
-                const provider = providers.find(p => p.id === id);
-                // 如果要删除的是激活状态的提供商，先激活另一个提供商
-                if (provider && provider.active) {
-                    const otherProvider = providers.find(p => p.id !== id);
-                    if (otherProvider) {
-                        otherProvider.active = true;
-                        await window.go.main.App.UpdateProvider(otherProvider.id, JSON.stringify(otherProvider));
-                    }
-                }
-
-                await window.go.main.App.DeleteProvider(id);
-                await loadProviders();
-                showToast('提供商已删除');
-            } catch (error) {
-                showToast(error, 'error');
-                // 恢复复选框状态
-                await loadProviders();
-            }
         }
 
         function toggleAddProviderModal() {
@@ -1556,10 +1517,9 @@
         window.addEventListener('load', () => {
             init();
 
-            // 如果已经有文本并且选择了自动检测，进行语言检测
+            // 如果已经有文本，进行语言检测
             const sourceText = document.getElementById('source-text').value;
-            const sourceLang = document.getElementById('source-lang').value;
-            if (sourceText.trim().length > 0 && sourceLang === 'auto') {
+            if (sourceText.trim().length > 0) {
                 detectLanguage(sourceText);
             }
 

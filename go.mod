@@ -4,6 +4,8 @@ go 1.23.0
 
 toolchain go1.23.6
 
+replace github.com/pemistahl/lingua-go => github.com/aimuz/lingua-go v0.0.0-20250303161544-f30d1d7a7325
+
 require (
 	github.com/pemistahl/lingua-go v1.4.0
 	github.com/robotn/gohook v0.42.0
@@ -28,7 +30,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/lo v1.49.1 // indirect
-	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/tkrajina/go-reflector v0.5.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
@@ -40,5 +42,5 @@ require (
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.36.0 // indirect
 )

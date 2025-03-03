@@ -2,6 +2,17 @@ package langdetect
 
 import (
 	"github.com/pemistahl/lingua-go"
+	_ "github.com/pemistahl/lingua-go/language-models/ar"
+	_ "github.com/pemistahl/lingua-go/language-models/de"
+	_ "github.com/pemistahl/lingua-go/language-models/en"
+	_ "github.com/pemistahl/lingua-go/language-models/es"
+	_ "github.com/pemistahl/lingua-go/language-models/fr"
+	_ "github.com/pemistahl/lingua-go/language-models/it"
+	_ "github.com/pemistahl/lingua-go/language-models/ja"
+	_ "github.com/pemistahl/lingua-go/language-models/ko"
+	_ "github.com/pemistahl/lingua-go/language-models/pt"
+	_ "github.com/pemistahl/lingua-go/language-models/ru"
+	_ "github.com/pemistahl/lingua-go/language-models/zh"
 )
 
 var detector lingua.LanguageDetector

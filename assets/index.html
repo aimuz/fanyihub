@@ -229,17 +229,17 @@
             height: 20px;
         }
         
-        .source-container {
+        .source-container, .target-container {
             position: relative;
             display: flex;
             height: 100%;
         }
         
-        .source-text-area {
+        .source-text-area, .target-text-area {
             padding-right: 30px;
         }
         
-        .clear-btn {
+        .clear-btn, .copy-btn {
             position: absolute;
             width: 32px;
             height: 32px;
@@ -795,7 +795,15 @@
                 </div>
             </div>
             <div class="text-area">
-                <textarea id="target-text" placeholder="翻译结果" readonly></textarea>
+                <div class="target-container">
+                    <textarea id="target-text" class="target-text-area" placeholder="翻译结果" readonly></textarea>
+                    <button id="copy-target-btn" class="icon-btn copy-btn" title="复制译文">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
                 <div id="translation-loading" class="loading-indicator">
                     <div class="loading-spinner"></div>
                     <span>翻译中...</span>
@@ -1511,6 +1519,23 @@
             document.getElementById('target-text').value = '';
             // 确保隐藏翻译中状态
             document.getElementById('translation-loading').classList.remove('show');
+        });
+        
+        // 复制译文
+        document.getElementById('copy-target-btn').addEventListener('click', () => {
+            const targetText = document.getElementById('target-text').value;
+            if (targetText) {
+                navigator.clipboard.writeText(targetText)
+                    .then(() => {
+                        showToast('已复制到剪贴板', 'success');
+                    })
+                    .catch(err => {
+                        console.error('复制失败:', err);
+                        showToast('复制失败', 'error');
+                    });
+            } else {
+                showToast('没有可复制的译文', 'info');
+            }
         });
         
         // 在页面加载时初始化

@@ -1,0 +1,54 @@
+// Re-export types from Wails generated models
+export { llm, main } from '../../wailsjs/go/models'
+
+export type Provider = {
+  name: string
+  type: 'openai' | 'openai-compatible'
+  base_url?: string
+  api_key: string
+  model: string
+  system_prompt?: string
+  max_tokens?: number
+  temperature?: number
+  active: boolean
+}
+
+export type TranslateRequest = {
+  text: string
+  sourceLang: string
+  targetLang: string
+}
+
+export type DetectLanguageResponse = {
+  code: string
+  name: string
+  defaultTarget: string
+}
+
+export type Language = {
+  code: string
+  name: string
+}
+
+export const LANGUAGES: Language[] = [
+  { code: 'auto', name: '自动' },
+  { code: 'zh', name: '中文' },
+  { code: 'en', name: '英语' },
+  { code: 'ja', name: '日语' },
+  { code: 'ko', name: '韩语' },
+  { code: 'fr', name: '法语' },
+  { code: 'de', name: '德语' },
+  { code: 'es', name: '西班牙语' },
+  { code: 'ru', name: '俄语' },
+  { code: 'it', name: '意大利语' },
+  { code: 'pt', name: '葡萄牙语' },
+  { code: 'ar', name: '阿拉伯语' },
+]
+
+export const LANGUAGE_NAME_MAP: Record<string, string> = Object.fromEntries(
+  LANGUAGES.map((l) => [l.name, l.code])
+)
+
+export const LANGUAGE_CODE_MAP: Record<string, string> = Object.fromEntries(
+  LANGUAGES.map((l) => [l.code, l.name])
+)

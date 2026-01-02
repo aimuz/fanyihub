@@ -1,0 +1,55 @@
+<script lang="ts">
+  import { LANGUAGES } from '../types'
+
+  type Props = {
+    value: string
+    displayValue?: string
+    onChange: (value: string) => void
+  }
+
+  let { value, displayValue, onChange }: Props = $props()
+
+  function handleChange(e: Event) {
+    const select = e.target as HTMLSelectElement
+    onChange(select.value)
+  }
+</script>
+
+<div class="language-group">
+  <select {value} onchange={handleChange}>
+    {#each LANGUAGES as lang}
+      <option value={lang.code}>
+        {lang.code === value && displayValue ? displayValue : lang.name}
+      </option>
+    {/each}
+  </select>
+</div>
+
+<style>
+  .language-group {
+    flex: 1;
+    position: relative;
+  }
+
+  select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    background-color: white;
+    appearance: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  select:hover {
+    background-color: #f8f8f8;
+  }
+
+  select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+  }
+</style>

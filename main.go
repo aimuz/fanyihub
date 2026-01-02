@@ -313,7 +313,7 @@ func (a *App) TranslateWithLLM(req TranslateRequest) (string, error) {
 	return client.ChatCompletion(messages)
 }
 
-//go:embed assets/*
+//go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {

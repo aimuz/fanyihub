@@ -59,12 +59,26 @@ func (a *App) setupGlobalHotkeys() {
 
 	// 初始化热键管理器
 	a.hotkeyManager = hotkey.NewHotkeyManager(toggleCb)
+
+	// 设置权限状态回调，通知前端
+	a.hotkeyManager.SetStatusCallback(func(granted bool) {
+		runtime.EventsEmit(a.ctx, "accessibility-permission", granted)
+		if granted {
+			slog.Info("辅助功能权限已授予")
+		} else {
+			slog.Warn("辅助功能权限未授予，请在系统设置中授权")
+		}
+	})
+
 	err := a.hotkeyManager.Start()
 	if err != nil {
 		slog.Error("启动全局快捷键失败", "error", err.Error())
-	} else {
-		slog.Info("全局快捷键已启动")
 	}
+}
+
+// GetAccessibilityPermission 获取辅助功能权限状态
+func (a *App) GetAccessibilityPermission() bool {
+	return hotkey.IsAccessibilityEnabled(false)
 }
 
 // ToggleWindowVisibility 切换窗口的可见性（显示/隐藏）

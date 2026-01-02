@@ -50,3 +50,8 @@ export async function setDefaultLanguage(sourceLang: string, targetLang: string)
 export async function toggleWindowVisibility(): Promise<void> {
   await App.ToggleWindowVisibility()
 }
+
+// Accessibility
+export async function getAccessibilityPermission(): Promise<boolean> {
+  return await App.GetAccessibilityPermission()
+}

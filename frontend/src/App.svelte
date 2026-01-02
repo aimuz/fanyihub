@@ -3,7 +3,7 @@
   import TranslationPanel from './components/TranslationPanel.svelte'
   import SettingsModal from './components/SettingsModal.svelte'
   import Toast from './components/Toast.svelte'
-  import { getProviders, getDefaultLanguages } from './services/wails'
+  import { getProviders, getDefaultLanguages, getAccessibilityPermission } from './services/wails'
   import type { Provider } from './types'
 
   // Global state using Svelte 5 runes
@@ -13,6 +13,7 @@
   let toastMessage = $state('')
   let toastType = $state<'info' | 'error' | 'success'>('info')
   let toastVisible = $state(false)
+  let accessibilityGranted = $state(true) // 默认假设已授权，避免闪烁
 
   // Toast helper
   function showToast(message: string, type: 'info' | 'error' | 'success' = 'info') {
@@ -29,6 +30,9 @@
     try {
       providers = await getProviders()
       defaultLanguages = await getDefaultLanguages()
+
+      // Check accessibility permission on load
+      accessibilityGranted = await getAccessibilityPermission()
     } catch (error) {
       console.error('Failed to load data:', error)
       showToast(String(error), 'error')
@@ -45,14 +49,32 @@
     defaultLanguages = await getDefaultLanguages()
   }
 
+  // Open system accessibility settings
+  function openAccessibilitySettings() {
+    // 使用 Wails 的 BrowserOpenURL 打开系统设置
+    if (window.runtime) {
+      window.runtime.BrowserOpenURL(
+        'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'
+      )
+    }
+  }
+
   onMount(() => {
     loadData()
 
     // Listen for clipboard events from backend
     if (window.runtime) {
-      window.runtime.EventsOn('set-clipboard-text', (text: string) => {
+      window.runtime.EventsOn('set-clipboard-text', (text: unknown) => {
         // Dispatch custom event that TranslationPanel can listen to
-        window.dispatchEvent(new CustomEvent('clipboard-text', { detail: text }))
+        window.dispatchEvent(new CustomEvent('clipboard-text', { detail: text as string }))
+      })
+
+      // Listen for accessibility permission status
+      window.runtime.EventsOn('accessibility-permission', (granted: unknown) => {
+        accessibilityGranted = granted as boolean
+        if (granted) {
+          showToast('辅助功能权限已授予，快捷键已启用', 'success')
+        }
       })
     }
   })
@@ -60,6 +82,14 @@
 
 <div class="app">
   <div class="drag-region" data-wails-drag></div>
+
+  {#if !accessibilityGranted}
+    <div class="permission-banner">
+      <span class="permission-icon">⚠️</span>
+      <span>需要辅助功能权限才能使用双击 Cmd+C 快捷键</span>
+      <button class="permission-btn" onclick={openAccessibilitySettings}>打开系统设置</button>
+    </div>
+  {/if}
 
   <main class="container">
     <TranslationPanel {defaultLanguages} onToast={showToast} />
@@ -117,6 +147,38 @@
     margin: 0 auto;
     width: 100%;
     height: 100%;
+  }
+
+  .permission-banner {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+    border-bottom: 1px solid #ffc107;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #664d03;
+  }
+
+  .permission-icon {
+    font-size: 16px;
+  }
+
+  .permission-btn {
+    margin-left: auto;
+    padding: 4px 12px;
+    background: #ffc107;
+    color: #664d03;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .permission-btn:hover {
+    background: #ffca2c;
   }
 
   .footer {

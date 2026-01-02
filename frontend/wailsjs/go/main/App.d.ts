@@ -7,6 +7,8 @@ export function AddProvider(arg1:llm.Provider):Promise<void>;
 
 export function DetectLanguage(arg1:string):Promise<main.DetectLanguageResponse>;
 
+export function GetAccessibilityPermission():Promise<boolean>;
+
 export function GetActiveProvider():Promise<llm.Provider>;
 
 export function GetDefaultLanguages():Promise<Record<string, string>>;

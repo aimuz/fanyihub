@@ -10,6 +10,10 @@ export function DetectLanguage(arg1) {
   return window['go']['main']['App']['DetectLanguage'](arg1);
 }
 
+export function GetAccessibilityPermission() {
+  return window['go']['main']['App']['GetAccessibilityPermission']();
+}
+
 export function GetActiveProvider() {
   return window['go']['main']['App']['GetActiveProvider']();
 }

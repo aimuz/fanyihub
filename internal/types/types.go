@@ -37,9 +37,10 @@ type DetectResult struct {
 
 // Usage represents token usage statistics from LLM API calls.
 type Usage struct {
-	PromptTokens     int `json:"promptTokens"`
-	CompletionTokens int `json:"completionTokens"`
-	TotalTokens      int `json:"totalTokens"`
+	PromptTokens     int  `json:"promptTokens"`
+	CompletionTokens int  `json:"completionTokens"`
+	TotalTokens      int  `json:"totalTokens"`
+	CacheHit         bool `json:"cacheHit"`
 }
 
 // TranslateResult represents the result of a translation request.

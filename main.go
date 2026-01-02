@@ -5,7 +5,11 @@ import (
 	"embed"
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
+	"time"
 
+	"github.com/aimuz/fanyihub/cache"
 	"github.com/aimuz/fanyihub/clipboard"
 	"github.com/aimuz/fanyihub/config"
 	"github.com/aimuz/fanyihub/hotkey"
@@ -27,6 +31,7 @@ type App struct {
 	ctx    context.Context
 	cfg    *config.Config
 	hotkey *hotkey.HotkeyManager
+	cache  *cache.Cache
 }
 
 func NewApp() *App {
@@ -47,6 +52,9 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.cfg = cfg
 
+	// Initialize cache
+	a.setupCache()
+
 	a.setupHotkey()
 }
 
@@ -54,6 +62,28 @@ func (a *App) shutdown(_ context.Context) {
 	if a.hotkey != nil {
 		a.hotkey.Stop()
 	}
+	if a.cache != nil {
+		if err := a.cache.Close(); err != nil {
+			slog.Error("close cache", "error", err)
+		}
+	}
+}
+
+func (a *App) setupCache() {
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		slog.Error("get config dir for cache", "error", err)
+		return
+	}
+
+	cachePath := filepath.Join(configDir, "fanyihub", "cache")
+	c, err := cache.New(cachePath)
+	if err != nil {
+		slog.Error("init cache", "error", err)
+		return
+	}
+	a.cache = c
+	slog.Info("cache initialized", "path", cachePath)
 }
 
 func (a *App) setupHotkey() {
@@ -164,28 +194,97 @@ func (a *App) DetectLanguage(text string) types.DetectResult {
 func (a *App) TranslateWithLLM(req types.TranslateRequest) (types.TranslateResult, error) {
 	provider := a.GetActiveProvider()
 	if provider == nil {
-		return types.TranslateResult{}, fmt.Errorf("no active provider")
+		return types.TranslateResult{}, fmt.Errorf("no active provider configured")
 	}
 
-	client := llm.NewClient(provider)
+	cacheKey := a.translationCacheKey(provider, req)
+
+	// Check cache first.
+	if result, ok := a.getCachedTranslation(cacheKey); ok {
+		return result, nil
+	}
+
+	// Call LLM API.
+	text, usage, err := a.callLLM(provider, req)
+	if err != nil {
+		return types.TranslateResult{}, fmt.Errorf("translate %q: %w", truncate(req.Text, 32), err)
+	}
+
+	// Store result in cache (best effort).
+	a.cacheTranslation(cacheKey, text, usage)
+
+	return types.TranslateResult{Text: text, Usage: usage}, nil
+}
+
+// translationCacheKey generates a cache key for the translation request.
+func (a *App) translationCacheKey(p *types.Provider, req types.TranslateRequest) string {
+	return cache.GenerateKey(p.Name, p.Model, req.SourceLang, req.TargetLang, req.Text)
+}
+
+// getCachedTranslation retrieves a cached translation if available.
+func (a *App) getCachedTranslation(key string) (types.TranslateResult, bool) {
+	if a.cache == nil {
+		return types.TranslateResult{}, false
+	}
+
+	entry, found := a.cache.Get(key)
+	if !found {
+		return types.TranslateResult{}, false
+	}
+
+	return types.TranslateResult{
+		Text: entry.Text,
+		Usage: types.Usage{
+			PromptTokens:     entry.Usage.PromptTokens,
+			CompletionTokens: entry.Usage.CompletionTokens,
+			TotalTokens:      entry.Usage.TotalTokens,
+			CacheHit:         true,
+		},
+	}, true
+}
+
+// cacheTranslation stores a translation result in the cache.
+func (a *App) cacheTranslation(key, text string, usage types.Usage) {
+	if a.cache == nil {
+		return
+	}
+
+	entry := &cache.Entry{
+		Text: text,
+		Usage: cache.Usage{
+			PromptTokens:     usage.PromptTokens,
+			CompletionTokens: usage.CompletionTokens,
+			TotalTokens:      usage.TotalTokens,
+		},
+		CreatedAt: time.Now(),
+	}
+
+	if err := a.cache.Set(key, entry, cache.DefaultTTL); err != nil {
+		slog.Warn("cache translation", "error", err)
+	}
+}
+
+// callLLM invokes the LLM API to perform translation.
+func (a *App) callLLM(p *types.Provider, req types.TranslateRequest) (string, types.Usage, error) {
+	client := llm.NewClient(p)
 
 	messages := []llm.Message{
-		{Role: "system", Content: provider.SystemPrompt},
+		{Role: "system", Content: p.SystemPrompt},
 		{Role: "user", Content: fmt.Sprintf(
 			"please translate the following text from %s to %s:\n\n%s",
 			req.SourceLang, req.TargetLang, req.Text,
 		)},
 	}
 
-	text, usage, err := client.Complete(messages)
-	if err != nil {
-		return types.TranslateResult{}, err
-	}
+	return client.Complete(messages)
+}
 
-	return types.TranslateResult{
-		Text:  text,
-		Usage: usage,
-	}, nil
+// truncate shortens a string for logging purposes.
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "..."
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

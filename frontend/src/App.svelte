@@ -4,7 +4,7 @@
   import SettingsModal from './components/SettingsModal.svelte'
   import Toast from './components/Toast.svelte'
   import { getProviders, getDefaultLanguages, getAccessibilityPermission } from './services/wails'
-  import type { Provider } from './types'
+  import type { Provider, Usage } from './types'
 
   // Global state using Svelte 5 runes
   let providers = $state<Provider[]>([])
@@ -14,6 +14,7 @@
   let toastType = $state<'info' | 'error' | 'success'>('info')
   let toastVisible = $state(false)
   let accessibilityGranted = $state(true) // 默认假设已授权，避免闪烁
+  let lastUsage = $state<Usage | null>(null)
 
   // Toast helper
   function showToast(message: string, type: 'info' | 'error' | 'success' = 'info') {
@@ -92,11 +93,25 @@
   {/if}
 
   <main class="container">
-    <TranslationPanel {defaultLanguages} onToast={showToast} />
+    <TranslationPanel
+      {defaultLanguages}
+      onToast={showToast}
+      onUsageChange={(u) => (lastUsage = u)}
+    />
   </main>
 
   <footer class="footer">
-    <div class="version">FanyiHub v1.0</div>
+    <div class="footer-left">
+      <span class="version">FanyiHub v1.0</span>
+      {#if lastUsage}
+        <span class="usage-info">
+          {#if lastUsage.cacheHit}
+            <span class="cache-badge">缓存</span>
+          {/if}
+          <span class="token-count">{lastUsage.totalTokens} tokens</span>
+        </span>
+      {/if}
+    </div>
     <button class="settings-btn" onclick={() => (showSettings = true)}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -195,9 +210,35 @@
     z-index: 100;
   }
 
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
   .version {
     color: var(--color-text-secondary);
     font-size: 12px;
+  }
+
+  .usage-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+  }
+
+  .cache-badge {
+    padding: 1px 6px;
+    background: #10b981;
+    color: white;
+    border-radius: 8px;
+    font-size: 10px;
+  }
+
+  .token-count {
+    opacity: 0.8;
   }
 
   .settings-btn {

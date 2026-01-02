@@ -30,6 +30,7 @@ export type Usage = {
   promptTokens: number
   completionTokens: number
   totalTokens: number
+  cacheHit: boolean
 }
 
 export type TranslateResult = {

@@ -7,9 +7,10 @@
   type Props = {
     defaultLanguages: Record<string, string>
     onToast: (message: string, type?: 'info' | 'error' | 'success') => void
+    onUsageChange?: (usage: Usage | null) => void
   }
 
-  let { defaultLanguages, onToast }: Props = $props()
+  let { defaultLanguages, onToast, onUsageChange }: Props = $props()
 
   // State
   let sourceText = $state('')
@@ -19,7 +20,6 @@
   let detectedLangName = $state('')
   let detectedTargetName = $state('')
   let isTranslating = $state(false)
-  let lastUsage = $state<Usage | null>(null)
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
   // Derived source language display
@@ -114,7 +114,7 @@
       })
 
       targetText = result.text
-      lastUsage = result.usage
+      onUsageChange?.(result.usage)
     } catch (error) {
       console.error('Translation error:', error)
       onToast(String(error), 'error')
@@ -293,14 +293,6 @@
       </div>
     </div>
   </div>
-
-  {#if lastUsage && lastUsage.totalTokens > 0}
-    <div class="usage-bar">
-      <span
-        >{lastUsage.promptTokens} + {lastUsage.completionTokens} = {lastUsage.totalTokens} tokens</span
-      >
-    </div>
-  {/if}
 </div>
 
 <style>
@@ -394,18 +386,5 @@
     gap: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     z-index: 10;
-  }
-
-  .usage-bar {
-    display: flex;
-    justify-content: flex-end;
-    padding: 4px 8px;
-    font-size: 11px;
-    color: var(--color-text-secondary);
-    opacity: 0.6;
-  }
-
-  .usage-bar:hover {
-    opacity: 1;
   }
 </style>

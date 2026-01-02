@@ -66,6 +66,7 @@ export namespace types {
 	    promptTokens: number;
 	    completionTokens: number;
 	    totalTokens: number;
+	    cacheHit: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Usage(source);
@@ -76,6 +77,7 @@ export namespace types {
 	        this.promptTokens = source["promptTokens"];
 	        this.completionTokens = source["completionTokens"];
 	        this.totalTokens = source["totalTokens"];
+	        this.cacheHit = source["cacheHit"];
 	    }
 	}
 	export class TranslateResult {

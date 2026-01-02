@@ -36,7 +36,15 @@
   <div class="provider-header">
     <div class="provider-title">
       <span class="provider-name">{provider.name}</span>
-      <span class="provider-type">{provider.type === 'openai' ? 'OpenAI' : 'OpenAI 兼容服务'}</span>
+      <span class="provider-type">
+        {provider.type === 'openai'
+          ? 'OpenAI'
+          : provider.type === 'gemini'
+            ? 'Google Gemini'
+            : provider.type === 'claude'
+              ? 'Anthropic Claude'
+              : 'OpenAI 兼容服务'}
+      </span>
     </div>
     <div class="provider-actions">
       <button class="action-btn" class:active={provider.active} onclick={handleSetActive}>

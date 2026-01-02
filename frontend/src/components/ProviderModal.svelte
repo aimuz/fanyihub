@@ -45,8 +45,8 @@
     }
   })
 
-  // Show base URL field when type is openai-compatible
-  let showBaseUrl = $derived(type === 'openai-compatible')
+  // Show base URL field when type is openai-compatible, gemini or claude
+  let showBaseUrl = $derived(type !== 'openai')
 
   // Auto-fill defaults when type changes
   function handleTypeChange() {
@@ -61,6 +61,13 @@
       if (!name) name = 'OpenAI'
     }
   }
+
+  // Dynamic placeholder for Base URL
+  let baseUrlPlaceholder = $derived.by(() => {
+    if (type === 'gemini') return '例如：https://generativelanguage.googleapis.com/v1beta/models'
+    if (type === 'claude') return '例如：https://api.anthropic.com/v1/messages'
+    return '例如：https://api.example.com/v1/chat/completions'
+  })
 
   // Save handler
   async function handleSave() {
@@ -116,7 +123,7 @@
           id="provider-base-url"
           type="text"
           bind:value={baseUrl}
-          placeholder="例如：https://api.example.com/v1/chat/completions"
+          placeholder={baseUrlPlaceholder}
         />
       </div>
     {/if}

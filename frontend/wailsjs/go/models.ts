@@ -1,5 +1,21 @@
-export namespace llm {
+export namespace types {
 	
+	export class DetectResult {
+	    code: string;
+	    name: string;
+	    defaultTarget: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DetectResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.code = source["code"];
+	        this.name = source["name"];
+	        this.defaultTarget = source["defaultTarget"];
+	    }
+	}
 	export class Provider {
 	    name: string;
 	    type: string;
@@ -26,27 +42,6 @@ export namespace llm {
 	        this.max_tokens = source["max_tokens"];
 	        this.temperature = source["temperature"];
 	        this.active = source["active"];
-	    }
-	}
-
-}
-
-export namespace main {
-	
-	export class DetectLanguageResponse {
-	    code: string;
-	    name: string;
-	    defaultTarget: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new DetectLanguageResponse(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.code = source["code"];
-	        this.name = source["name"];
-	        this.defaultTarget = source["defaultTarget"];
 	    }
 	}
 	export class TranslateRequest {

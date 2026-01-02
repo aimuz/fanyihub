@@ -1,7 +1,9 @@
+// Package langdetect provides language detection using lingua-go.
 package langdetect
 
 import (
 	"github.com/pemistahl/lingua-go"
+	// Language model imports for lingua
 	_ "github.com/pemistahl/lingua-go/language-models/ar"
 	_ "github.com/pemistahl/lingua-go/language-models/de"
 	_ "github.com/pemistahl/lingua-go/language-models/en"
@@ -15,104 +17,62 @@ import (
 	_ "github.com/pemistahl/lingua-go/language-models/zh"
 )
 
+// langInfo holds language code and display name.
+type langInfo struct {
+	code string
+	name string
+}
+
+// languageMap maps lingua.Language to our language info (table-driven).
+var languageMap = map[lingua.Language]langInfo{
+	lingua.Chinese:    {"zh", "中文"},
+	lingua.English:    {"en", "英语"},
+	lingua.Japanese:   {"ja", "日语"},
+	lingua.Korean:     {"ko", "韩语"},
+	lingua.French:     {"fr", "法语"},
+	lingua.German:     {"de", "德语"},
+	lingua.Spanish:    {"es", "西班牙语"},
+	lingua.Russian:    {"ru", "俄语"},
+	lingua.Italian:    {"it", "意大利语"},
+	lingua.Portuguese: {"pt", "葡萄牙语"},
+	lingua.Arabic:     {"ar", "阿拉伯语"},
+}
+
+// supportedLanguages extracts the list of supported languages from the map.
+func supportedLanguages() []lingua.Language {
+	langs := make([]lingua.Language, 0, len(languageMap))
+	for lang := range languageMap {
+		langs = append(langs, lang)
+	}
+	return langs
+}
+
 var detector lingua.LanguageDetector
 
-// 初始化语言检测器
 func init() {
-	// 支持的语言列表
-	languages := []lingua.Language{
-		lingua.Chinese,
-		lingua.English,
-		lingua.Japanese,
-		lingua.Korean,
-		lingua.French,
-		lingua.German,
-		lingua.Spanish,
-		lingua.Russian,
-		lingua.Italian,
-		lingua.Portuguese,
-		lingua.Arabic,
-	}
-
-	// 创建语言检测器
 	detector = lingua.NewLanguageDetectorBuilder().
-		FromLanguages(languages...).
+		FromLanguages(supportedLanguages()...).
 		WithPreloadedLanguageModels().
 		Build()
 }
 
-// DetectLanguage 检测文本的语言
-func DetectLanguage(text string) (string, string) {
+// Detect detects the language of the given text.
+// Returns language code and display name.
+// If detection fails, returns ("auto", "").
+func Detect(text string) (code, name string) {
 	if text == "" {
 		return "auto", ""
 	}
 
-	// 检测语言
-	language, exists := detector.DetectLanguageOf(text)
-	if !exists {
+	lang, ok := detector.DetectLanguageOf(text)
+	if !ok {
 		return "auto", ""
 	}
 
-	// 返回语言代码和语言名称
-	return mapLanguageCode(language), mapLanguageName(language)
-}
-
-// 将 lingua 语言映射到我们的语言代码
-func mapLanguageCode(language lingua.Language) string {
-	switch language {
-	case lingua.Chinese:
-		return "zh"
-	case lingua.English:
-		return "en"
-	case lingua.Japanese:
-		return "ja"
-	case lingua.Korean:
-		return "ko"
-	case lingua.French:
-		return "fr"
-	case lingua.German:
-		return "de"
-	case lingua.Spanish:
-		return "es"
-	case lingua.Russian:
-		return "ru"
-	case lingua.Italian:
-		return "it"
-	case lingua.Portuguese:
-		return "pt"
-	case lingua.Arabic:
-		return "ar"
-	default:
-		return "auto"
+	info, ok := languageMap[lang]
+	if !ok {
+		return "auto", ""
 	}
-}
 
-// 将 lingua 语言映射到语言名称
-func mapLanguageName(language lingua.Language) string {
-	switch language {
-	case lingua.Chinese:
-		return "中文"
-	case lingua.English:
-		return "英语"
-	case lingua.Japanese:
-		return "日语"
-	case lingua.Korean:
-		return "韩语"
-	case lingua.French:
-		return "法语"
-	case lingua.German:
-		return "德语"
-	case lingua.Spanish:
-		return "西班牙语"
-	case lingua.Russian:
-		return "俄语"
-	case lingua.Italian:
-		return "意大利语"
-	case lingua.Portuguese:
-		return "葡萄牙语"
-	case lingua.Arabic:
-		return "阿拉伯语"
-	default:
-		return ""
-	}
+	return info.code, info.name
 }

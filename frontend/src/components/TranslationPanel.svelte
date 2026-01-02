@@ -62,6 +62,18 @@
         if (detection.defaultTarget && LANGUAGE_CODE_MAP[detection.defaultTarget]) {
           detectedTargetName = LANGUAGE_CODE_MAP[detection.defaultTarget]
         }
+
+        // Smart switch: if detected source matches current target, switch target
+        if (sourceLang === 'auto' && detection.code === targetLang) {
+          const newTarget = detection.defaultTarget || 'en'
+          if (newTarget !== targetLang) {
+            targetLang = newTarget
+            // clear detected target name since we switched to specific lang
+            if (targetLang !== 'auto') {
+              detectedTargetName = ''
+            }
+          }
+        }
       }
 
       // Translate
@@ -114,6 +126,15 @@
     sourceLang = lang
     if (lang !== 'auto') {
       detectedLangName = ''
+
+      // Smart switch target language
+      if (targetLang === lang || targetLang === 'auto') {
+        const newTarget = defaultLanguages[lang] || 'en'
+        if (newTarget !== lang) {
+          targetLang = newTarget
+          detectedTargetName = ''
+        }
+      }
     }
     if (sourceText.trim()) {
       translate()
@@ -137,6 +158,8 @@
     const temp = sourceLang
     sourceLang = targetLang
     targetLang = temp
+    detectedLangName = ''
+    detectedTargetName = ''
 
     if (sourceText.trim()) {
       translate()

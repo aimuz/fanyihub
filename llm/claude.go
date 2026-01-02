@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/aimuz/fanyihub/internal/types"
 )
 
 // https://api.anthropic.com/v1/messages
@@ -27,13 +29,17 @@ type claudeResponse struct {
 	Content []struct {
 		Text string `json:"text"`
 	} `json:"content"`
+	Usage *struct {
+		InputTokens  int `json:"input_tokens"`
+		OutputTokens int `json:"output_tokens"`
+	} `json:"usage,omitempty"`
 	Error *struct {
 		Type    string `json:"type"`
 		Message string `json:"message"`
 	} `json:"error,omitempty"`
 }
 
-func (c *Client) completeClaude(messages []Message) (string, error) {
+func (c *Client) completeClaude(messages []Message) (string, types.Usage, error) {
 	var claudeMsgs []claudeMessage
 	var systemPrompt string
 
@@ -61,7 +67,7 @@ func (c *Client) completeClaude(messages []Message) (string, error) {
 
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
-		return "", fmt.Errorf("marshal request: %w", err)
+		return "", types.Usage{}, fmt.Errorf("marshal request: %w", err)
 	}
 
 	baseURL := defaultClaudeBaseURL
@@ -71,7 +77,7 @@ func (c *Client) completeClaude(messages []Message) (string, error) {
 
 	req, err := http.NewRequest("POST", baseURL, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return "", fmt.Errorf("create request: %w", err)
+		return "", types.Usage{}, fmt.Errorf("create request: %w", err)
 	}
 
 	req.Header.Set("x-api-key", c.provider.APIKey)
@@ -80,27 +86,36 @@ func (c *Client) completeClaude(messages []Message) (string, error) {
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("do request: %w", err)
+		return "", types.Usage{}, fmt.Errorf("do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("read response: %w", err)
+		return "", types.Usage{}, fmt.Errorf("read response: %w", err)
 	}
 
 	var claudeResp claudeResponse
 	if err := json.Unmarshal(body, &claudeResp); err != nil {
-		return "", fmt.Errorf("unmarshal response: %w", err)
+		return "", types.Usage{}, fmt.Errorf("unmarshal response: %w", err)
 	}
 
 	if claudeResp.Error != nil {
-		return "", fmt.Errorf("api error: %s - %s", claudeResp.Error.Type, claudeResp.Error.Message)
+		return "", types.Usage{}, fmt.Errorf("api error: %s - %s", claudeResp.Error.Type, claudeResp.Error.Message)
 	}
 
 	if len(claudeResp.Content) == 0 {
-		return "", fmt.Errorf("no content returned")
+		return "", types.Usage{}, fmt.Errorf("no content returned")
 	}
 
-	return claudeResp.Content[0].Text, nil
+	var usage types.Usage
+	if claudeResp.Usage != nil {
+		usage = types.Usage{
+			PromptTokens:     claudeResp.Usage.InputTokens,
+			CompletionTokens: claudeResp.Usage.OutputTokens,
+			TotalTokens:      claudeResp.Usage.InputTokens + claudeResp.Usage.OutputTokens,
+		}
+	}
+
+	return claudeResp.Content[0].Text, usage, nil
 }

@@ -27,8 +27,8 @@ func NewClient(p *types.Provider) *Client {
 	}
 }
 
-// Complete sends a chat completion request and returns the response text.
-func (c *Client) Complete(messages []Message) (string, error) {
+// Complete sends a chat completion request and returns the response text and usage.
+func (c *Client) Complete(messages []Message) (string, types.Usage, error) {
 	switch c.provider.Type {
 	case "gemini":
 		return c.completeGemini(messages)

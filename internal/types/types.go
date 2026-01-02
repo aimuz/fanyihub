@@ -33,3 +33,16 @@ type DetectResult struct {
 	Name          string `json:"name"`
 	DefaultTarget string `json:"defaultTarget"`
 }
+
+// Usage represents token usage statistics from LLM API calls.
+type Usage struct {
+	PromptTokens     int `json:"promptTokens"`
+	CompletionTokens int `json:"completionTokens"`
+	TotalTokens      int `json:"totalTokens"`
+}
+
+// TranslateResult represents the result of a translation request.
+type TranslateResult struct {
+	Text  string `json:"text"`
+	Usage Usage  `json:"usage"`
+}

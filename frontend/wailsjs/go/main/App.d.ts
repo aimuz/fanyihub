@@ -22,6 +22,6 @@ export function SetProviderActive(arg1:string):Promise<void>;
 
 export function ToggleWindowVisibility():Promise<void>;
 
-export function TranslateWithLLM(arg1:types.TranslateRequest):Promise<string>;
+export function TranslateWithLLM(arg1:types.TranslateRequest):Promise<types.TranslateResult>;
 
 export function UpdateProvider(arg1:string,arg2:types.Provider):Promise<void>;

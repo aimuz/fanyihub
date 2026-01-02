@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/aimuz/fanyihub/internal/types"
 )
 
 // https://ai.google.dev/api/rest/v1beta/models/generateContent
@@ -41,13 +43,18 @@ type geminiResponse struct {
 			Parts []geminiPart `json:"parts"`
 		} `json:"content"`
 	} `json:"candidates"`
+	UsageMetadata *struct {
+		PromptTokenCount     int `json:"promptTokenCount"`
+		CandidatesTokenCount int `json:"candidatesTokenCount"`
+		TotalTokenCount      int `json:"totalTokenCount"`
+	} `json:"usageMetadata,omitempty"`
 	Error *struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
 	} `json:"error,omitempty"`
 }
 
-func (c *Client) completeGemini(messages []Message) (string, error) {
+func (c *Client) completeGemini(messages []Message) (string, types.Usage, error) {
 	// Convert messages to Gemini format
 	var parts []geminiContent
 	var systemPrompt string
@@ -85,7 +92,7 @@ func (c *Client) completeGemini(messages []Message) (string, error) {
 
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
-		return "", fmt.Errorf("marshal request: %w", err)
+		return "", types.Usage{}, fmt.Errorf("marshal request: %w", err)
 	}
 
 	baseURL := defaultGeminiBaseURL
@@ -97,33 +104,42 @@ func (c *Client) completeGemini(messages []Message) (string, error) {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return "", fmt.Errorf("create request: %w", err)
+		return "", types.Usage{}, fmt.Errorf("create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("do request: %w", err)
+		return "", types.Usage{}, fmt.Errorf("do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("read response: %w", err)
+		return "", types.Usage{}, fmt.Errorf("read response: %w", err)
 	}
 
 	var geminiResp geminiResponse
 	if err := json.Unmarshal(body, &geminiResp); err != nil {
-		return "", fmt.Errorf("unmarshal response: %w", err)
+		return "", types.Usage{}, fmt.Errorf("unmarshal response: %w", err)
 	}
 
 	if geminiResp.Error != nil {
-		return "", fmt.Errorf("api error: %d - %s", geminiResp.Error.Code, geminiResp.Error.Message)
+		return "", types.Usage{}, fmt.Errorf("api error: %d - %s", geminiResp.Error.Code, geminiResp.Error.Message)
 	}
 
 	if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
-		return "", fmt.Errorf("no candidates returned")
+		return "", types.Usage{}, fmt.Errorf("no candidates returned")
 	}
 
-	return geminiResp.Candidates[0].Content.Parts[0].Text, nil
+	var usage types.Usage
+	if geminiResp.UsageMetadata != nil {
+		usage = types.Usage{
+			PromptTokens:     geminiResp.UsageMetadata.PromptTokenCount,
+			CompletionTokens: geminiResp.UsageMetadata.CandidatesTokenCount,
+			TotalTokens:      geminiResp.UsageMetadata.TotalTokenCount,
+		}
+	}
+
+	return geminiResp.Candidates[0].Content.Parts[0].Text, usage, nil
 }

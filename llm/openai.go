@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/aimuz/fanyihub/internal/types"
 )
 
 const defaultBaseURL = "https://api.openai.com/v1/chat/completions"
@@ -23,9 +25,14 @@ type openaiResponse struct {
 			Content string `json:"content"`
 		} `json:"message"`
 	} `json:"choices"`
+	Usage struct {
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
+		TotalTokens      int `json:"total_tokens"`
+	} `json:"usage"`
 }
 
-func (c *Client) completeOpenAI(messages []Message) (string, error) {
+func (c *Client) completeOpenAI(messages []Message) (string, types.Usage, error) {
 	url := defaultBaseURL
 	if c.provider.Type == "openai-compatible" && c.provider.BaseURL != "" {
 		url = c.provider.BaseURL
@@ -40,12 +47,12 @@ func (c *Client) completeOpenAI(messages []Message) (string, error) {
 
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
-		return "", fmt.Errorf("marshal request: %w", err)
+		return "", types.Usage{}, fmt.Errorf("marshal request: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return "", fmt.Errorf("create request: %w", err)
+		return "", types.Usage{}, fmt.Errorf("create request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -53,27 +60,33 @@ func (c *Client) completeOpenAI(messages []Message) (string, error) {
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("do request: %w", err)
+		return "", types.Usage{}, fmt.Errorf("do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("read response: %w", err)
+		return "", types.Usage{}, fmt.Errorf("read response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("api error: %d - %s", resp.StatusCode, string(body))
+		return "", types.Usage{}, fmt.Errorf("api error: %d - %s", resp.StatusCode, string(body))
 	}
 
 	var chatResp openaiResponse
 	if err := json.Unmarshal(body, &chatResp); err != nil {
-		return "", fmt.Errorf("unmarshal response: %w", err)
+		return "", types.Usage{}, fmt.Errorf("unmarshal response: %w", err)
 	}
 
 	if len(chatResp.Choices) == 0 {
-		return "", fmt.Errorf("no choices")
+		return "", types.Usage{}, fmt.Errorf("no choices")
 	}
 
-	return chatResp.Choices[0].Message.Content, nil
+	usage := types.Usage{
+		PromptTokens:     chatResp.Usage.PromptTokens,
+		CompletionTokens: chatResp.Usage.CompletionTokens,
+		TotalTokens:      chatResp.Usage.TotalTokens,
+	}
+
+	return chatResp.Choices[0].Message.Content, usage, nil
 }

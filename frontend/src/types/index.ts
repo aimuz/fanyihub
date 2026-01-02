@@ -25,6 +25,17 @@ export type DetectLanguageResponse = {
   defaultTarget: string
 }
 
+export type Usage = {
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+}
+
+export type TranslateResult = {
+  text: string
+  usage: Usage
+}
+
 export type Language = {
   code: string
   name: string

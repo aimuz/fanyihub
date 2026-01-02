@@ -1,5 +1,5 @@
 import * as App from '../../wailsjs/go/main/App'
-import type { Provider, TranslateRequest, DetectLanguageResponse } from '../types'
+import type { Provider, TranslateRequest, DetectLanguageResponse, TranslateResult } from '../types'
 
 // Provider management
 export async function getProviders(): Promise<Provider[]> {
@@ -28,7 +28,7 @@ export async function getActiveProvider(): Promise<Provider | null> {
 }
 
 // Translation
-export async function translateWithLLM(request: TranslateRequest): Promise<string> {
+export async function translateWithLLM(request: TranslateRequest): Promise<TranslateResult> {
   return await App.TranslateWithLLM(request)
 }
 

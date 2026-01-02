@@ -161,10 +161,10 @@ func (a *App) DetectLanguage(text string) types.DetectResult {
 // Translation
 // ─────────────────────────────────────────────────────────────────────────────
 
-func (a *App) TranslateWithLLM(req types.TranslateRequest) (string, error) {
+func (a *App) TranslateWithLLM(req types.TranslateRequest) (types.TranslateResult, error) {
 	provider := a.GetActiveProvider()
 	if provider == nil {
-		return "", fmt.Errorf("no active provider")
+		return types.TranslateResult{}, fmt.Errorf("no active provider")
 	}
 
 	client := llm.NewClient(provider)
@@ -177,7 +177,15 @@ func (a *App) TranslateWithLLM(req types.TranslateRequest) (string, error) {
 		)},
 	}
 
-	return client.Complete(messages)
+	text, usage, err := client.Complete(messages)
+	if err != nil {
+		return types.TranslateResult{}, err
+	}
+
+	return types.TranslateResult{
+		Text:  text,
+		Usage: usage,
+	}, nil
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

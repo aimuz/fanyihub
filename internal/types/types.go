@@ -3,15 +3,16 @@ package types
 
 // Provider represents an LLM provider configuration.
 type Provider struct {
-	Name         string  `json:"name"`
-	Type         string  `json:"type"` // "openai", "openai-compatible", "gemini", "claude"
-	BaseURL      string  `json:"base_url,omitempty"`
-	APIKey       string  `json:"api_key"`
-	Model        string  `json:"model"`
-	SystemPrompt string  `json:"system_prompt,omitempty"`
-	MaxTokens    int     `json:"max_tokens,omitempty"`
-	Temperature  float64 `json:"temperature,omitempty"`
-	Active       bool    `json:"active"`
+	Name            string  `json:"name"`
+	Type            string  `json:"type"` // "openai", "openai-compatible", "gemini", "claude"
+	BaseURL         string  `json:"base_url,omitempty"`
+	APIKey          string  `json:"api_key"`
+	Model           string  `json:"model"`
+	SystemPrompt    string  `json:"system_prompt,omitempty"`
+	MaxTokens       int     `json:"max_tokens,omitempty"`
+	Temperature     float64 `json:"temperature,omitempty"`
+	Active          bool    `json:"active"`
+	DisableThinking bool    `json:"disable_thinking,omitempty"` // For Gemini: set thinkingBudget to 0
 }
 
 // DefaultMaxTokens is the default max tokens if not specified.

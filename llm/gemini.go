@@ -29,8 +29,13 @@ type geminiRequest struct {
 }
 
 type geminiConfig struct {
-	MaxOutputTokens int     `json:"maxOutputTokens,omitempty"`
-	Temperature     float64 `json:"temperature,omitempty"`
+	MaxOutputTokens int             `json:"maxOutputTokens,omitempty"`
+	Temperature     float64         `json:"temperature,omitempty"`
+	ThinkingConfig  *thinkingConfig `json:"thinkingConfig,omitempty"`
+}
+
+type thinkingConfig struct {
+	ThinkingBudget int `json:"thinkingBudget"`
 }
 
 type geminiSystemInst struct {
@@ -82,6 +87,13 @@ func (c *Client) completeGemini(messages []Message) (string, types.Usage, error)
 			MaxOutputTokens: c.provider.MaxTokens,
 			Temperature:     c.provider.Temperature,
 		},
+	}
+
+	// Disable thinking for Gemini 2.5 Flash models if requested
+	if c.provider.DisableThinking {
+		reqBody.GenerationConfig.ThinkingConfig = &thinkingConfig{
+			ThinkingBudget: 0,
+		}
 	}
 
 	if systemPrompt != "" {

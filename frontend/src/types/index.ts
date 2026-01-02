@@ -11,6 +11,7 @@ export type Provider = {
   max_tokens?: number
   temperature?: number
   active: boolean
+  disable_thinking?: boolean // For Gemini: set thinkingBudget to 0
 }
 
 export type TranslateRequest = {

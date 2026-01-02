@@ -27,6 +27,7 @@
   )
   let maxTokens = $state(1000)
   let temperature = $state(0.3)
+  let disableThinking = $state(false)
   let showAdvanced = $state(false)
 
   // Initialize form from provider when component mounts
@@ -42,6 +43,7 @@
         'You are a professional translator. Please translate the following text accurately while maintaining its original meaning and style'
       maxTokens = provider.max_tokens || 1000
       temperature = provider.temperature || 0.3
+      disableThinking = provider.disable_thinking || false
     }
   })
 
@@ -82,6 +84,7 @@
         max_tokens: maxTokens,
         temperature,
         active: true,
+        disable_thinking: disableThinking,
       }
 
       if (isEditing && provider) {
@@ -166,6 +169,15 @@
               max="2"
             />
           </div>
+          {#if type === 'gemini'}
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" bind:checked={disableThinking} />
+                关闭思考模式
+              </label>
+              <p class="hint">适用于 Gemini 2.5 Flash 等支持思考的模型，关闭后可减少延迟和成本</p>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
@@ -225,5 +237,32 @@
 
   .save-btn:hover {
     background: var(--color-primary-hover);
+  }
+
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .checkbox-group input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.4;
   }
 </style>

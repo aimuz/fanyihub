@@ -26,6 +26,7 @@ export namespace types {
 	    max_tokens?: number;
 	    temperature?: number;
 	    active: boolean;
+	    disable_thinking?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Provider(source);
@@ -42,6 +43,7 @@ export namespace types {
 	        this.max_tokens = source["max_tokens"];
 	        this.temperature = source["temperature"];
 	        this.active = source["active"];
+	        this.disable_thinking = source["disable_thinking"];
 	    }
 	}
 	export class TranslateRequest {

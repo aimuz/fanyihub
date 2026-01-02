@@ -4,7 +4,7 @@ package types
 // Provider represents an LLM provider configuration.
 type Provider struct {
 	Name         string  `json:"name"`
-	Type         string  `json:"type"` // "openai" or "openai-compatible"
+	Type         string  `json:"type"` // "openai", "openai-compatible", "gemini", "claude"
 	BaseURL      string  `json:"base_url,omitempty"`
 	APIKey       string  `json:"api_key"`
 	Model        string  `json:"model"`

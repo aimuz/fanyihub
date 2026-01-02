@@ -17,7 +17,7 @@
   let title = $derived(isEditing ? '编辑翻译提供商' : '添加翻译提供商')
 
   // Form state - initialized from provider prop (captures initial value intentionally)
-  let type = $state<'openai' | 'openai-compatible'>('openai')
+  let type = $state<'openai' | 'openai-compatible' | 'gemini' | 'claude'>('openai')
   let name = $state('')
   let baseUrl = $state('')
   let apiKey = $state('')
@@ -47,6 +47,20 @@
 
   // Show base URL field when type is openai-compatible
   let showBaseUrl = $derived(type === 'openai-compatible')
+
+  // Auto-fill defaults when type changes
+  function handleTypeChange() {
+    if (type === 'gemini') {
+      if (!model) model = 'gemini-1.5-flash'
+      if (!name) name = 'Gemini'
+    } else if (type === 'claude') {
+      if (!model) model = 'claude-3-5-sonnet-latest'
+      if (!name) name = 'Claude'
+    } else if (type === 'openai') {
+      if (!model) model = 'gpt-4o'
+      if (!name) name = 'OpenAI'
+    }
+  }
 
   // Save handler
   async function handleSave() {
@@ -82,9 +96,11 @@
   {#snippet children()}
     <div class="form-group">
       <label for="provider-type">类型</label>
-      <select id="provider-type" bind:value={type}>
+      <select id="provider-type" bind:value={type} onchange={handleTypeChange}>
         <option value="openai">OpenAI</option>
         <option value="openai-compatible">OpenAI 兼容服务</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="claude">Anthropic Claude</option>
       </select>
     </div>
 

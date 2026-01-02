@@ -3,7 +3,7 @@ export { llm, main } from '../../wailsjs/go/models'
 
 export type Provider = {
   name: string
-  type: 'openai' | 'openai-compatible'
+  type: 'openai' | 'openai-compatible' | 'gemini' | 'claude'
   base_url?: string
   api_key: string
   model: string

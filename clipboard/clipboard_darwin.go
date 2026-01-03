@@ -30,4 +30,3 @@ func getClipboardContent(_ context.Context) (string, error) {
 	}
 	return C.GoString(cstr), nil
 }
-

@@ -38,6 +38,10 @@ export function SetProviderActive(arg1) {
   return window['go']['main']['App']['SetProviderActive'](arg1);
 }
 
+export function TakeScreenshotAndOCR() {
+  return window['go']['main']['App']['TakeScreenshotAndOCR']();
+}
+
 export function ToggleWindowVisibility() {
   return window['go']['main']['App']['ToggleWindowVisibility']();
 }

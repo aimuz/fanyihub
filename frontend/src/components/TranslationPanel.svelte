@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import LanguageSelector from './LanguageSelector.svelte'
-  import { translateWithLLM, detectLanguage } from '../services/wails'
+  import { translateWithLLM, detectLanguage, takeScreenshotAndOCR } from '../services/wails'
   import { LANGUAGE_NAME_MAP, LANGUAGE_CODE_MAP, type Usage } from '../types'
 
   type Props = {
@@ -20,6 +20,7 @@
   let detectedLangName = $state('')
   let detectedTargetName = $state('')
   let isTranslating = $state(false)
+  let isOCR = $state(false)
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
   // Derived source language display
@@ -168,6 +169,20 @@
     }
   }
 
+  // Handle OCR screenshot
+  async function handleOCR() {
+    if (isOCR) return
+    isOCR = true
+    try {
+      await takeScreenshotAndOCR()
+      // Result handled by set-clipboard-text event
+    } catch (error) {
+      console.error('OCR error:', error)
+    } finally {
+      isOCR = false
+    }
+  }
+
   // Clear source text
   function clearSource() {
     sourceText = ''
@@ -246,44 +261,80 @@
           bind:value={sourceText}
           oninput={handleSourceInput}
         ></textarea>
-        <button class="icon-btn action-btn" onclick={clearSource} title="清空源文本">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+
+        <div class="toolbar">
+          <button
+            class="icon-btn tool-btn"
+            onclick={handleOCR}
+            title="截图 OCR (Cmd+Shift+O)"
+            disabled={isOCR}
           >
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+            {#if isOCR}
+              <div class="spinner-sm"></div>
+            {:else}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                ></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            {/if}
+          </button>
+          {#if sourceText}
+            <button class="icon-btn tool-btn" onclick={clearSource} title="清空源文本">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          {/if}
+        </div>
       </div>
     </div>
     <div class="text-area">
       <div class="text-container">
         <textarea class="target-text-area" placeholder="翻译结果" readonly value={targetText}
         ></textarea>
-        <button class="icon-btn action-btn" onclick={copyTarget} title="复制译文">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-        </button>
+
+        <div class="toolbar">
+          <button class="icon-btn tool-btn" onclick={copyTarget} title="复制译文">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </div>
+
         {#if isTranslating}
           <div class="loading-indicator">
             <div class="loading-spinner"></div>
@@ -365,12 +416,47 @@
     padding-right: 32px;
   }
 
-  .action-btn {
+  .toolbar {
     position: absolute;
     top: 0;
     right: 0;
+    display: flex;
+    gap: 4px;
     background-color: rgba(245, 245, 247, 0.8);
     backdrop-filter: blur(2px);
+    border-bottom-left-radius: 6px;
+  }
+
+  .tool-btn {
+    padding: 4px;
+    color: var(--color-text-tertiary);
+    transition: all var(--transition-fast);
+  }
+
+  .tool-btn:hover:not(:disabled) {
+    color: var(--color-primary);
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+
+  .tool-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .spinner-sm {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-left-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .loading-indicator {

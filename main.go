@@ -16,6 +16,8 @@ import (
 	"github.com/aimuz/fanyihub/internal/types"
 	"github.com/aimuz/fanyihub/langdetect"
 	"github.com/aimuz/fanyihub/llm"
+	"github.com/aimuz/fanyihub/ocr"
+	"github.com/aimuz/fanyihub/screenshot"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -87,9 +89,19 @@ func (a *App) setupCache() {
 }
 
 func (a *App) setupHotkey() {
-	a.hotkey = hotkey.NewHotkeyManager(func() {
-		a.ToggleWindowVisibility()
-	})
+	a.hotkey = hotkey.NewHotkeyManager(
+		func() {
+			a.ToggleWindowVisibility()
+		},
+		func() {
+			// Run in goroutine to not block the hotkey listener
+			go func() {
+				if _, err := a.TakeScreenshotAndOCR(); err != nil {
+					slog.Error("ocr screenshot", "error", err)
+				}
+			}()
+		},
+	)
 
 	a.hotkey.SetStatusCallback(func(granted bool) {
 		runtime.EventsEmit(a.ctx, "accessibility-permission", granted)
@@ -103,6 +115,39 @@ func (a *App) setupHotkey() {
 	if err := a.hotkey.Start(); err != nil {
 		slog.Error("start hotkey", "error", err)
 	}
+}
+
+// TakeScreenshotAndOCR captures a screenshot and performs OCR.
+// Returns the recognized text.
+func (a *App) TakeScreenshotAndOCR() (string, error) {
+	// Hide window to allow capturing screen behind it
+	runtime.WindowHide(a.ctx)
+
+	// Give a little time for window to hide
+	time.Sleep(100 * time.Millisecond)
+
+	imagePath, err := screenshot.CaptureInteractive()
+	if err != nil {
+		// If cancelled or failed, show window again if not active
+		runtime.WindowShow(a.ctx)
+		return "", fmt.Errorf("capture screenshot: %w", err)
+	}
+	defer os.Remove(imagePath) // Clean up temp file
+
+	text, err := ocr.RecognizeText(imagePath)
+	if err != nil {
+		runtime.WindowShow(a.ctx)
+		return "", fmt.Errorf("recognize text: %w", err)
+	}
+
+	// Show window and populate text
+	runtime.WindowShow(a.ctx)
+
+	if text != "" {
+		runtime.EventsEmit(a.ctx, "set-clipboard-text", text)
+	}
+
+	return text, nil
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

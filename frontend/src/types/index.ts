@@ -1,5 +1,5 @@
 // Re-export types from Wails generated models
-export { llm, main } from '../../wailsjs/go/models'
+// export { llm, main } from '../../wailsjs/go/models'
 
 export type Provider = {
   name: string

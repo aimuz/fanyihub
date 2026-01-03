@@ -28,16 +28,18 @@ type HotkeyManager struct {
 	running     bool
 	mu          sync.Mutex
 	toggleCb    func()        // 切换窗口回调函数
+	ocrCb       func()        // OCR 截图回调函数
 	statusCb    func(bool)    // 权限状态回调函数
 	stopPolling chan struct{} // 停止轮询信号
 	clickTime   time.Time     // 上次点击时间
 }
 
 // NewHotkeyManager 创建一个新的快捷键管理器
-func NewHotkeyManager(toggleCb func()) *HotkeyManager {
+func NewHotkeyManager(toggleCb func(), ocrCb func()) *HotkeyManager {
 	return &HotkeyManager{
 		running:   false,
 		toggleCb:  toggleCb,
+		ocrCb:     ocrCb,
 		clickTime: time.Now(),
 	}
 }
@@ -87,6 +89,13 @@ func (hm *HotkeyManager) startHook() error {
 			}
 		}
 		hm.clickTime = time.Now()
+	})
+
+	// 注册 OCR 截图快捷键: Cmd+Shift+O
+	hook.Register(hook.KeyDown, []string{"cmd", "shift", "o"}, func(e hook.Event) {
+		if hm.ocrCb != nil {
+			hm.ocrCb()
+		}
 	})
 
 	// 启动钩子监听

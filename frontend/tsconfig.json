@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "bundler",
+        "target": "ESNext",
+        "module": "ESNext",
+        "strict": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "baseUrl": ".",
+        "paths": {
+            "@wailsjs/*": [
+                "wailsjs/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.svelte",
+        "wailsjs/**/*.ts"
+    ]
+}

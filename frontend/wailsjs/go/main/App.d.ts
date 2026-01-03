@@ -20,6 +20,8 @@ export function SetDefaultLanguage(arg1:string,arg2:string):Promise<void>;
 
 export function SetProviderActive(arg1:string):Promise<void>;
 
+export function TakeScreenshotAndOCR():Promise<string>;
+
 export function ToggleWindowVisibility():Promise<void>;
 
 export function TranslateWithLLM(arg1:types.TranslateRequest):Promise<types.TranslateResult>;

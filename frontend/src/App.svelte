@@ -102,7 +102,7 @@
 
   <footer class="footer">
     <div class="footer-left">
-      <span class="version">FanyiHub v1.0</span>
+      <span class="version">Transy v1.0</span>
       {#if lastUsage}
         <span class="usage-info">
           {#if lastUsage.cacheHit}

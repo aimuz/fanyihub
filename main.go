@@ -9,20 +9,20 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/aimuz/fanyihub/cache"
-	"github.com/aimuz/fanyihub/clipboard"
-	"github.com/aimuz/fanyihub/config"
-	"github.com/aimuz/fanyihub/hotkey"
-	"github.com/aimuz/fanyihub/internal/types"
-	"github.com/aimuz/fanyihub/langdetect"
-	"github.com/aimuz/fanyihub/llm"
-	"github.com/aimuz/fanyihub/ocr"
-	"github.com/aimuz/fanyihub/screenshot"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"go.aimuz.me/transy/cache"
+	"go.aimuz.me/transy/clipboard"
+	"go.aimuz.me/transy/config"
+	"go.aimuz.me/transy/hotkey"
+	"go.aimuz.me/transy/internal/types"
+	"go.aimuz.me/transy/langdetect"
+	"go.aimuz.me/transy/llm"
+	"go.aimuz.me/transy/ocr"
+	"go.aimuz.me/transy/screenshot"
 )
 
 //go:embed all:frontend/dist
@@ -78,7 +78,7 @@ func (a *App) setupCache() {
 		return
 	}
 
-	cachePath := filepath.Join(configDir, "fanyihub", "cache")
+	cachePath := filepath.Join(configDir, "transy", "cache")
 	c, err := cache.New(cachePath)
 	if err != nil {
 		slog.Error("init cache", "error", err)
@@ -340,7 +340,7 @@ func main() {
 	app := NewApp()
 
 	err := wails.Run(&options.App{
-		Title:  "FanyiHub",
+		Title:  "Transy",
 		Width:  1024,
 		Height: 768,
 		AssetServer: &assetserver.Options{
@@ -352,8 +352,8 @@ func main() {
 		Mac: &mac.Options{
 			TitleBar: mac.TitleBarHidden(),
 			About: &mac.AboutInfo{
-				Title:   "FanyiHub",
-				Message: "©2025 FanyiHub. All rights reserved.",
+				Title:   "Transy",
+				Message: "©2025 Transy. All rights reserved.",
 			},
 		},
 	})

@@ -1,21 +1,24 @@
-# FanyiHub (翻译中心)
+# Transy
 
-FanyiHub 是一个基于大语言模型（LLM）的智能翻译工具，使用 Go 语言和 Wails 框架开发，提供跨平台的桌面翻译体验。
+Transy 是一个基于大语言模型（LLM）的智能翻译工具，使用 Go 语言和 Wails 框架开发，提供跨平台的桌面翻译体验。
 
 ## 功能特点
 
 - 🌐 **多语言支持**：自动检测多种语言，包括中文、英语、日语、韩语等 
 - 🤖 **LLM 翻译**：基于大语言模型的高质量翻译，支持多种 LLM 提供商
 - ⌨️ **全局快捷键**：通过自定义快捷键快速唤起翻译窗口
-- ⚙️ **灵活配置**：可配置多个 LLM 提供商，包括 OpenAI 和兼容 OpenAI API 的其他服务
+- ⚙️ **灵活配置**：可配置多个 LLM 提供商，包括 OpenAI、Gemini、Claude 和兼容 OpenAI API 的其他服务
 - 🔄 **智能语言检测**：自动检测输入文本的语言，并选择合适的目标语言
+- 📸 **截图 OCR**：支持截图文字识别并翻译（macOS）
+- 💾 **智能缓存**：使用 BadgerDB 缓存翻译结果，提升响应速度
+- 📊 **用量统计**：显示每次翻译的 token 使用情况
 - 🖥️ **跨平台**：支持 macOS、Windows 和 Linux 系统
 
 ## 安装
 
 ### 预构建版本
 
-从 [Releases](https://github.com/aimuz/fanyihub/releases) 页面下载适合您系统的预构建版本。
+从 [Releases](https://github.com/aimuz/transy/releases) 页面下载适合您系统的预构建版本。
 
 ### 从源码构建
 
@@ -35,8 +38,8 @@ go install github.com/wailsapp/wails/v2/cmd/wails@latest
 2. 克隆仓库:
 
 ```bash
-git clone https://github.com/aimuz/fanyihub.git
-cd fanyihub
+git clone https://github.com/aimuz/transy.git
+cd transy
 ```
 
 3. 构建应用:
@@ -54,10 +57,12 @@ wails build
 
 ## 配置 LLM 提供商
 
-FanyiHub 支持多种 LLM 提供商，包括：
+Transy 支持多种 LLM 提供商，包括：
 
-1. **OpenAI API**：使用 OpenAI 的 GPT 模型
-2. **兼容 OpenAI API 的服务**：如 Azure OpenAI、Claude、本地部署的大模型等
+1. **OpenAI**：使用 OpenAI 的 GPT 模型
+2. **Gemini**：Google 的 Gemini 模型（支持思维模式开关）
+3. **Claude**：Anthropic 的 Claude 模型
+4. **兼容 OpenAI API 的服务**：如 Azure OpenAI、本地部署的大模型等
 
 在应用设置中，您可以添加、编辑和删除 LLM 提供商配置。
 

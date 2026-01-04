@@ -1,4 +1,4 @@
-module github.com/aimuz/fanyihub
+module go.aimuz.me/transy
 
 go 1.25
 

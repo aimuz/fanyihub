@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/aimuz/fanyihub/internal/types"
+	"go.aimuz.me/transy/internal/types"
 )
 
 // https://api.anthropic.com/v1/messages

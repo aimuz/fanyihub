@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/aimuz/fanyihub/internal/types"
+	"go.aimuz.me/transy/internal/types"
 )
 
 // https://ai.google.dev/api/rest/v1beta/models/generateContent

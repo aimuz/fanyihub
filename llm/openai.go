@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/aimuz/fanyihub/internal/types"
+	"go.aimuz.me/transy/internal/types"
 )
 
 const defaultBaseURL = "https://api.openai.com/v1/chat/completions"

@@ -8,11 +8,12 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/aimuz/fanyihub/internal/types"
+	"go.aimuz.me/transy/internal/types"
 )
 
 const (
-	appName        = "fanyihub"
+	appName        = "transy"
+	oldAppName     = "fanyihub"
 	configFileName = "config.json"
 )
 
@@ -25,6 +26,11 @@ type Config struct {
 // Load loads configuration from the config file.
 // Returns default config if file doesn't exist.
 func Load() (*Config, error) {
+	// Ensure migration from old app name to new app name
+	if err := migrateLegacyConfig(); err != nil {
+		return nil, fmt.Errorf("migrate legacy config: %w", err)
+	}
+
 	path, err := configPath()
 	if err != nil {
 		return nil, fmt.Errorf("get config path: %w", err)
@@ -222,4 +228,48 @@ func defaultLanguages() map[string]string {
 		"zh": "en",
 		"en": "zh",
 	}
+}
+
+// migrateLegacyConfig migrates configuration from old app name to new app name.
+// If the old directory exists and the new one doesn't, it creates a symlink.
+func migrateLegacyConfig() error {
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		return fmt.Errorf("get user config dir: %w", err)
+	}
+
+	oldDir := filepath.Join(configDir, oldAppName)
+	newDir := filepath.Join(configDir, appName)
+
+	// Check if old directory exists
+	oldInfo, err := os.Stat(oldDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// No old directory, nothing to migrate
+			return nil
+		}
+		return fmt.Errorf("stat old config dir: %w", err)
+	}
+
+	if !oldInfo.IsDir() {
+		// Old path exists but is not a directory
+		return nil
+	}
+
+	// Check if new directory exists
+	_, err = os.Stat(newDir)
+	if err == nil {
+		// New directory already exists, no migration needed
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return fmt.Errorf("stat new config dir: %w", err)
+	}
+
+	// New directory doesn't exist, create symlink from new to old
+	if err := os.Symlink(oldDir, newDir); err != nil {
+		return fmt.Errorf("create symlink: %w", err)
+	}
+
+	return nil
 }

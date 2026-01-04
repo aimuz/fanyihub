@@ -4,7 +4,7 @@ package llm
 import (
 	"net/http"
 
-	"github.com/aimuz/fanyihub/internal/types"
+	"go.aimuz.me/transy/internal/types"
 )
 
 // Message represents a chat message.

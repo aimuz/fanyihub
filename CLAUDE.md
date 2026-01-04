@@ -1,4 +1,4 @@
-# CLAUDE.md - FanyiHub Development Guide
+# CLAUDE.md - Transy Development Guide
 
 ## Build Commands
 - Build app: `wails build`
